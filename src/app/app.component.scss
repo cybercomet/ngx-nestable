@@ -1,0 +1,18 @@
+:host { 
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.demo-content {
+    flex-direction: column;
+    flex: 1 1 auto;
+    padding: 0 16px;
+}
+
+.demo-white-circle {
+    background-color: white;
+    width: 56px; 
+    height: 56px;
+    border-radius: 50%;
+}

@@ -1,0 +1,31 @@
+<mat-toolbar color="primary">
+  <span fxFlex>Ngx-nestable demo</span>
+  <div class="demo-white-circle">
+    <img src="assets/ngx_nestable.svg" width="56px">
+  </div>
+</mat-toolbar>
+
+<div class="demo-content">
+  <div fxLayout.lt-sm="column" fxLayoutGap="16px" fxFlexOffset="16px">
+    <button mat-raised-button color="primary"
+      (click)="nestable.expandAll()">Expand All</button>
+    <button mat-raised-button color="primary"
+      (click)="nestable.collapseAll()">Collapse All</button>
+    <button mat-raised-button color="primary"
+      (click)="pushItem()">Push Item</button>
+  </div>
+  
+  <div fxFlex fxLayout="row" fxLayout.lt-sm="column" fxFlexOffset="16px">
+    <ngx-nestable [(list)]="list" #nestable
+      [template]="itemTemplate" fxFlex>
+    </ngx-nestable>
+    
+    <div fxFlex="1 1 auto" fxFlexOffset="16px" fxFlexOffset.lt-sm="0px">
+      <textarea fxFlex>{{list | json}}</textarea>
+    </div>
+  </div>
+</div>
+
+<ng-template #itemTemplate let-item>
+  <div>Item: {{item.id}}</div>
+</ng-template>
