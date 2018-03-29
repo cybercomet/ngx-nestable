@@ -1,4 +1,5 @@
 import { Component, ElementRef, Renderer2 } from '@angular/core';
+import { NestableSettings } from '../../lib/src/nestable.models';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +9,9 @@ import { Component, ElementRef, Renderer2 } from '@angular/core';
 export class AppComponent {
 
   public idCount = 13;
+  public options = {
+    fixedDepth: false
+  } as NestableSettings;
   public list = [
     { 'id': 1 },
     {
@@ -28,7 +32,12 @@ export class AppComponent {
       ]
     },
     { 'id': 11 },
-    { 'id': 12 }
+    {
+      'id': 12,
+      'children': [
+        { 'id': 13 }
+      ]
+    }
   ];
 
   constructor(
@@ -43,5 +52,9 @@ export class AppComponent {
   public pushItem() {
     this.list.push({ id: ++this.idCount });
     this.list = [...this.list];
+  }
+
+  public toggleFixedDepth() {
+    this.options.fixedDepth = !this.options.fixedDepth;
   }
 }

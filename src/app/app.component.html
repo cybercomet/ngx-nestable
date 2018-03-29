@@ -13,10 +13,15 @@
       (click)="nestable.collapseAll()">Collapse All</button>
     <button mat-raised-button color="primary"
       (click)="pushItem()">Push Item</button>
+    <div fxFlex></div>
+    <mat-slide-toggle (change)="toggleFixedDepth()">
+      Fixed depth
+    </mat-slide-toggle>
   </div>
   
   <div fxFlex fxLayout="row" fxLayout.lt-sm="column" fxFlexOffset="16px">
     <ngx-nestable [(list)]="list" #nestable
+      [options]="options"
       [template]="itemTemplate" fxFlex>
     </ngx-nestable>
     

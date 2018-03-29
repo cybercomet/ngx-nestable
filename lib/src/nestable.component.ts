@@ -49,11 +49,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   @Output() public listChange = new EventEmitter();
 
   @Input() public template: ViewContainerRef;
-
-  @Input()
-  public get options() { return this._options; }
-  public set options(opt) { this._options = Object.assign(defaultSettings, opt); }
-
+  @Input() public options = defaultSettings;
   @Input()
   public get list() { return this._list; }
   public set list(list) {
@@ -85,7 +81,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _componentActive = false;
   private _mouse;
   private _list = [];
-  private _options = Object.assign({}, defaultSettings) as NestableSettings;
+  // private _options = Object.assign({}, defaultSettings) as NestableSettings;
   private _cancelMousemove: Function;
   private _cancelMouseup: Function;
   private _placeholder;
@@ -102,7 +98,14 @@ export class NestableComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this._componentActive = true;
+    const optionKeys = Object.keys(defaultSettings);
+    for (const key of optionKeys) {
+      if (typeof this.options[key] === 'undefined') {
+        this.options[key] = defaultSettings[key];
+      }
+    }
     this._init();
+
   }
 
   ngOnDestroy(): void {
@@ -418,12 +421,13 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     // get point element depth
+    let pointDepth;
     if (this.pointEl) {
-      const pointDepth = this._getParents(this.pointEl,
+      pointDepth = this._getParents(this.pointEl,
         this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
       ).length;
 
-      if (this.options.fixedDepth && pointDepth !== this.relativeDepth) { return; }
+      // if (this.options.fixedDepth && pointDepth !== this.relativeDepth) { return; }
     } else { return; }
 
     /**
@@ -512,18 +516,24 @@ export class NestableComponent implements OnInit, OnDestroy {
 
       const before = event.pageY < (this._offset(this.pointEl).top + this.pointEl.clientHeight / 2);
       const placeholderParent = this._placeholder.parentNode;
-      // if empty create new list to replace empty placeholder
-      // if (isEmpty) {
-      //   // list = $(document.createElement(opt.listNodeName)).addClass(opt.listClass);
-      //   // list.append(this.placeEl);
-      //   // this.pointEl.replaceWith(list);
-      // } else if (before) {
-      //   this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
-      // } else {
-      //   this._insertAfter(this._placeholder, this.pointEl);
-      // }
 
-      if (before) {
+      if (this.options.fixedDepth) {
+        if (pointDepth === this.relativeDepth - 1) {
+          const children = this.pointEl.querySelector(this.options.listNodeName + '.' + this.options.listClass);
+          if (!children) {
+            const newList = document.createElement(this.options.listNodeName);
+            newList.classList.add(this.options.listClass);
+            newList.appendChild(this._placeholder);
+            this.pointEl.appendChild(newList);
+          }
+        } else if (pointDepth === this.relativeDepth) {
+          if (before) {
+            this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
+          } else {
+            this._insertAfter(this._placeholder, this.pointEl);
+          }
+        } else { return; }
+      } else if (before) {
         this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
       } else {
         this._insertAfter(this._placeholder, this.pointEl);
@@ -532,16 +542,6 @@ export class NestableComponent implements OnInit, OnDestroy {
       if (!placeholderParent.children.length) {
         this.unsetParent(placeholderParent.parentElement);
       }
-
-      // if (!this.dragRootEl.find(opt.itemNodeName + '.' + opt.itemClass).length) {
-      //   this.dragRootEl.append('<div class="' + opt.emptyClass + '"/>');
-      // }
-
-      // // parent root list has changed
-      // this.dragRootEl = pointElRoot;
-      // if (isNewRoot) {
-      //   this.hasNewRoot = this.el !== this.dragRootEl;
-      // }
     }
   }
 
