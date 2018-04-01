@@ -122,21 +122,23 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     this.el.nativeElement
       .dispatchEvent(new CustomEvent('listUpdated', {
-        detail: this.list,
+        detail: {
+          list: this.list
+        },
         bubbles: true
       }));
   }
 
-  private _traverseChildren(tree, callback) {
+  private _traverseChildren(tree, callback, parent = null) {
     for (let i = 0; i < tree.length; i++) {
       const item = tree[i];
       if (typeof item === 'undefined') { continue; }
-      const callbackResult = callback(item);
+      const callbackResult = callback(item, parent);
 
       if (callbackResult) { break; }
 
       if (item.children) {
-        this._traverseChildren(item.children, callback);
+        this._traverseChildren(item.children, callback, item);
       }
     }
   }
@@ -633,20 +635,33 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._cancelMouseup();
     this._cancelMousemove();
     // debugger
-    const draggedId = this.dragEl.firstElementChild.id;
+    const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
     this.dragEl.parentNode.removeChild(this.dragEl);
     this._replaceTargetWithElements(this._placeholder, this.dragEl.children);
-    this.updateModelFromDOM(document.getElementById(draggedId));
+    this.updateModelFromDOM(document.getElementById(draggedId.toString()));
 
     this.dragEl.remove();
 
     this.reset();
 
+    let draggedItem, parentItem;
+    this._traverseChildren(this.list, (item, parent) => {
+      if (item['$$id'] === draggedId) {
+        draggedItem = item, parentItem = parent;
+        return true;
+      }
+    });
+
     this.el.nativeElement
       .dispatchEvent(new CustomEvent('listUpdated', {
-        detail: this.list,
+        detail: {
+          list: this.list,
+          draggedItem,
+          parentItem
+        },
         bubbles: true
       }));
+
   }
 
   public dragMove(event) {

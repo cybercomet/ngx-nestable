@@ -45,7 +45,7 @@ export class AppComponent {
     private renderer: Renderer2
   ) {
     this.renderer.listen(this.el.nativeElement, 'listUpdated', e => {
-      this.list = e.detail;
+      this.list = e.detail.list;
     });
   }
 
