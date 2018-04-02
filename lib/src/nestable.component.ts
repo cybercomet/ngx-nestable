@@ -635,6 +635,9 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._cancelMouseup();
     this._cancelMousemove();
     // debugger
+
+    if (!this.dragEl) { return; }
+
     const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
     this.dragEl.parentNode.removeChild(this.dragEl);
     this._replaceTargetWithElements(this._placeholder, this.dragEl.children);

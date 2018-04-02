@@ -1,7 +1,7 @@
 {
   "name": "ngx-nestable",
   "description": "Nestable list with drag and drop for Angular",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "private": false,
   "contributors": [
