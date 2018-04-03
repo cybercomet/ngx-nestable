@@ -1,7 +1,5 @@
-<div [class]="options.rootClass">
-  <ng-container *ngTemplateOutlet="nestableList; context:{$implicit: list}">
-  </ng-container>
-</div>
+<ng-container *ngTemplateOutlet="nestableList; context:{$implicit: list, rootList: true}">
+</ng-container>
 
 <ng-template #nestableList let-nestable>
   <ul [class]="options.listClass" *ngIf="nestable?.length">
@@ -12,7 +10,7 @@
       </ng-container>
 
       <ng-container *ngIf="item?.children">
-        <ng-container *ngTemplateOutlet="nestableList; context:{$implicit: item.children}">
+        <ng-container *ngTemplateOutlet="nestableList; context:{$implicit: item.children, rootList:false}">
         </ng-container>
       </ng-container>
     </li>
@@ -20,7 +18,7 @@
 </ng-template>
 
 <ng-template #nestableItem let-item>
-  <div [class]="options.handleClass">
+  <div class="nestable-item-container">
     <ng-container *ngTemplateOutlet="template; context:{$implicit: item}">
     </ng-container>
   </div>
