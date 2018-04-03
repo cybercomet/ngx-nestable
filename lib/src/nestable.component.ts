@@ -14,6 +14,8 @@ import {
   NgZone
 } from '@angular/core';
 
+import * as helper from './nestable.helper';
+
 import { defaultSettings, mouse } from './nestable.constant';
 import { NestableSettings } from './nestable.models';
 
@@ -59,7 +61,7 @@ export class NestableComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.reset();
         if (this.options.exportCollapsed) {
-          this._traverseChildren(this._list, item => {
+          helper._traverseChildren(this._list, item => {
             if (item.expanded === false) {
               this.collapseItem(document.getElementById(item['$$id']));
             }
@@ -112,38 +114,8 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._destroy();
   }
 
-  private _exportCollapsed(li, expanded: boolean) {
-    const item = this._findObjectInTree(this._list, li.id);
-    if (expanded) {
-      delete item.expanded;
-    } else {
-      item.expanded = false;
-    }
-
-    this.el.nativeElement
-      .dispatchEvent(new CustomEvent('listUpdated', {
-        detail: {
-          list: this.list
-        },
-        bubbles: true
-      }));
-  }
-
-  private _traverseChildren(tree, callback, parent = null) {
-    for (let i = 0; i < tree.length; i++) {
-      const item = tree[i];
-      if (typeof item === 'undefined') { continue; }
-      const callbackResult = callback(item, parent);
-
-      if (callbackResult) { break; }
-
-      if (item.children) {
-        this._traverseChildren(item.children, callback, item);
-      }
-    }
-  }
-
   /**
+   * @deprecated
    * set mousedown listener for all DOM items, and bind remove event
    * listener functions to coresponding elements in list
    */
@@ -152,7 +124,7 @@ export class NestableComponent implements OnInit, OnDestroy {
       this._createDragListeners();
       this._createColapseListeners();
       if (this.options.exportCollapsed) {
-        this._traverseChildren(this._list, item => {
+        helper._traverseChildren(this._list, item => {
           if (item.expanded === false) {
             this.collapseItem(document.getElementById(item['$$id']));
           }
@@ -163,6 +135,9 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._generateItemIds();
   }
 
+  /**
+   * @deprecated
+   */
   private _createDragListeners() {
     const itemsDom = this.el.nativeElement.getElementsByClassName(this.options.itemClass);
     for (let i = 0; i < itemsDom.length; i++) {
@@ -180,6 +155,9 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * @deprecated
+   */
   private _createColapseListeners() {
     const childButtons = this.el.nativeElement.querySelectorAll('[data-action]');
     for (let i = 0; i < childButtons.length; i++) {
@@ -197,13 +175,19 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * TODO this f should return an id number so it can be used in template
+   */
   private _generateItemIds() {
-    this._traverseChildren(this._list, item => {
+    helper._traverseChildren(this._list, item => {
       item['$$id'] = this._itemId++;
       // if (!item.children) { item.children = []; }
     });
   }
 
+  /**
+   * @deprecated
+   */
   private _destroy(el?) {
     if (typeof el === 'undefined') {
       for (const i of this.items) { i.destroy(); }
@@ -213,82 +197,16 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  private _offset(elem) {
-    let box = { top: 0, left: 0 };
-
-    // BlackBerry 5, iOS 3 (original iPhone)
-    if (typeof elem.getBoundingClientRect !== undefined) {
-      box = elem.getBoundingClientRect();
-    }
-
-    return {
-      top: box.top + (window.pageYOffset || elem.scrollTop) - (elem.clientTop || 0),
-      left: box.left + (window.pageXOffset || elem.scrollLeft) - (elem.clientLeft || 0)
-    };
-  }
-
-  private _closest(el, selector) {
-    let matchesFn;
-
-    // find vendor prefix
-    ['matches', 'webkitMatchesSelector', 'mozMatchesSelector', 'msMatchesSelector', 'oMatchesSelector'].some(function (fn) {
-      if (typeof document.body[fn] === 'function') {
-        matchesFn = fn;
-        return true;
-      }
-      return false;
-    });
-
-    let parent;
-
-    // traverse parents
-    while (el) {
-      parent = el.parentElement;
-      if (parent === null) { break; }
-      const matches = parent[matchesFn](selector);
-      if (parent && matches) { return parent; }
-      el = parent;
-    }
-
-    return null;
-  }
-
-  private _getParents(el, parentSelector = document.body) {
-
-    const parents = [];
-    let parentNode = el.parentNode;
-
-    while (parentNode !== parentSelector) {
-      const o = parentNode;
-      if (!parentNode) { break; }
-      if (parentNode.tagName === parentSelector.tagName) {
-        parents.push(o);
-      }
-      parentNode = o.parentNode;
-    }
-    parents.push(parentSelector); // Push that parentSelector you wanted to stop at
-
-    return parents;
-  }
-
-  private _insertAfter(newNode, referenceNode) {
-    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
-  }
-
-  private _replace(newNode, referenceNode) {
-    referenceNode.parentNode.replaceChild(newNode, referenceNode);
-  }
-
   private _createDragClone(event) {
     const target = event.target,
-      dragItem = this._closest(target, this.options.itemNodeName + '.' + this.options.itemClass);
+      dragItem = helper._closest(target, this.options.itemNodeName + '.' + this.options.itemClass);
 
     if (dragItem === null) { return; }
 
     const dragRect = dragItem.getBoundingClientRect();
 
-    this._mouse.offsetX = event.pageX - this._offset(dragItem).left;
-    this._mouse.offsetY = event.pageY - this._offset(dragItem).top;
+    this._mouse.offsetX = event.pageX - helper._offset(dragItem).left;
+    this._mouse.offsetY = event.pageY - helper._offset(dragItem).top;
     this._mouse.startX = this._mouse.lastX = event.pageX;
     this._mouse.startY = this._mouse.lastY = event.pageY;
 
@@ -301,7 +219,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     this._placeholder = document.createElement('div');
     this._placeholder.classList.add(this.options.placeClass);
-    this._insertAfter(this._placeholder, dragItem);
+    helper._insertAfter(this._placeholder, dragItem);
     this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
     dragItem.parentNode.removeChild(dragItem);
     this.dragEl.appendChild(dragItem);
@@ -318,12 +236,12 @@ export class NestableComponent implements OnInit, OnDestroy {
     let depth;
     const items = this.dragEl.querySelectorAll(this.options.itemNodeName);
     for (let i = 0; i < items.length; i++) {
-      depth = this._getParents(items[i], this.dragEl).length;
+      depth = helper._getParents(items[i], this.dragEl).length;
       if (depth > this.dragDepth) { this.dragDepth = depth; }
     }
 
     // depth relative to root
-    this.relativeDepth = this._getParents(this._placeholder,
+    this.relativeDepth = helper._getParents(this._placeholder,
       this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
     ).length;
   }
@@ -331,32 +249,6 @@ export class NestableComponent implements OnInit, OnDestroy {
   // TODO remove create placeholder logic form _createDragClone
   private _createPlaceholder() {
 
-  }
-
-  private _findObjectInTree(array, id) {
-    let result = null;
-
-    this._traverseChildren(array, item => {
-      if (item['$$id'] === Number.parseInt(id)) {
-        result = item;
-        return true;
-      }
-    });
-
-    return result;
-  }
-
-  private _replaceTargetWithElements(target, elements) {
-    let i = elements.length;
-
-    if (target.parentNode) {
-      while (i--) {
-        target.parentNode.insertBefore(elements[i], target);
-      }
-
-      /// remove the target.
-      target.parentNode.removeChild(target);
-    }
   }
 
   private _move(event) {
@@ -419,13 +311,13 @@ export class NestableComponent implements OnInit, OnDestroy {
     if (!hasPointerEvents) { this.dragEl.style.visibility = 'visible'; }
 
     if (this.pointEl && this.pointEl.classList.contains(this.options.handleClass)) {
-      this.pointEl = this._closest(this.pointEl, this.options.itemNodeName + '.' + this.options.itemClass);
+      this.pointEl = helper._closest(this.pointEl, this.options.itemNodeName + '.' + this.options.itemClass);
     }
 
     // get point element depth
     let pointDepth;
     if (this.pointEl) {
-      pointDepth = this._getParents(this.pointEl,
+      pointDepth = helper._getParents(this.pointEl,
         this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
       ).length;
 
@@ -452,7 +344,7 @@ export class NestableComponent implements OnInit, OnDestroy {
         list = list[list.length - 1];
 
         // check if depth limit has reached
-        depth = this._getParents(this._placeholder,
+        depth = helper._getParents(this._placeholder,
           this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
         ).length;
         if (depth + this.dragDepth <= this.options.maxDepth) {
@@ -476,11 +368,11 @@ export class NestableComponent implements OnInit, OnDestroy {
         const next = document.querySelector(`.${this.options.placeClass} + ${this.options.itemNodeName}.${this.options.itemClass}`);
         const parentElement = this._placeholder.parentElement;
         if (!next && parentElement) {
-          const closestItem = this._closest(this._placeholder, this.options.itemNodeName + '.' + this.options.itemClass);
+          const closestItem = helper._closest(this._placeholder, this.options.itemNodeName + '.' + this.options.itemClass);
 
           if (closestItem) {
             parentElement.removeChild(this._placeholder);
-            this._insertAfter(this._placeholder, closestItem);
+            helper._insertAfter(this._placeholder, closestItem);
           }
 
           if (!parentElement.children.length) {
@@ -497,7 +389,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     // find root list of item under cursor
-    const pointElRoot = this._closest(this.pointEl, `.${this.options.rootClass}`),
+    const pointElRoot = helper._closest(this.pointEl, `.${this.options.rootClass}`),
       isNewRoot = pointElRoot ? this.dragRootEl.dataset['nestable-id'] !== pointElRoot.dataset['nestable-id'] : false;
 
     /**
@@ -510,13 +402,13 @@ export class NestableComponent implements OnInit, OnDestroy {
       }
 
       // check depth limit
-      depth = this.dragDepth - 1 + this._getParents(this.pointEl,
+      depth = this.dragDepth - 1 + helper._getParents(this.pointEl,
         this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
       ).length;
 
       if (depth > this.options.maxDepth) { return; }
 
-      const before = event.pageY < (this._offset(this.pointEl).top + this.pointEl.clientHeight / 2);
+      const before = event.pageY < (helper._offset(this.pointEl).top + this.pointEl.clientHeight / 2);
       const placeholderParent = this._placeholder.parentNode;
 
       if (this.options.fixedDepth) {
@@ -532,13 +424,13 @@ export class NestableComponent implements OnInit, OnDestroy {
           if (before) {
             this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
           } else {
-            this._insertAfter(this._placeholder, this.pointEl);
+            helper._insertAfter(this._placeholder, this.pointEl);
           }
         } else { return; }
       } else if (before) {
         this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
       } else {
-        this._insertAfter(this._placeholder, this.pointEl);
+        helper._insertAfter(this._placeholder, this.pointEl);
       }
 
       if (!placeholderParent.children.length) {
@@ -547,10 +439,10 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  public returnOptions() {
-    return this.options;
-  }
-
+  /**
+   * @deprecated
+   * @param draggedEl
+   */
   public updateModelFromDOM(draggedEl) {
     const tempArray = [...this._list];
 
@@ -561,10 +453,10 @@ export class NestableComponent implements OnInit, OnDestroy {
       .querySelector(`${this.options.listNodeName}.${this.options.listClass}`)
       .children;
 
-    this._traverseChildren(list, item => {
+    helper._traverseChildren(list, item => {
       if (item.nodeName === 'LI') {
         if (!item.parentElement.parentElement.id) {
-          const child = Object.assign({}, this._findObjectInTree(tempArray, item.id));
+          const child = Object.assign({}, helper._findObjectInTree(tempArray, item.id));
           delete child.children;
           this._list.push(child);
 
@@ -573,10 +465,10 @@ export class NestableComponent implements OnInit, OnDestroy {
           }
 
         } else {
-          const parent = this._findObjectInTree(this._list, item.parentElement.parentElement.id);
+          const parent = helper._findObjectInTree(this._list, item.parentElement.parentElement.id);
           if (!parent.children) { parent.children = []; }
 
-          const child = Object.assign({}, this._findObjectInTree(tempArray, item.id));
+          const child = Object.assign({}, helper._findObjectInTree(tempArray, item.id));
           delete child.children;
 
           parent.children.push(child);
@@ -601,10 +493,10 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.hasNewRoot = false;
     this.pointEl = null;
 
-    this._destroy();
+    this._destroy(); // TODO remove
 
-    this._createDragListeners();
-    this._createColapseListeners();
+    this._createDragListeners(); // TODO remove
+    this._createColapseListeners(); // TODO remove
   }
 
   public dragStart(event) {
@@ -640,7 +532,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
     this.dragEl.parentNode.removeChild(this.dragEl);
-    this._replaceTargetWithElements(this._placeholder, this.dragEl.children);
+    helper._replaceTargetWithElements(this._placeholder, this.dragEl.children);
     this.updateModelFromDOM(document.getElementById(draggedId.toString()));
 
     this.dragEl.remove();
@@ -648,7 +540,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.reset();
 
     let draggedItem, parentItem;
-    this._traverseChildren(this.list, (item, parent) => {
+    helper._traverseChildren(this.list, (item, parent) => {
       if (item['$$id'] === draggedId) {
         draggedItem = item, parentItem = parent;
         return true;
@@ -676,6 +568,72 @@ export class NestableComponent implements OnInit, OnDestroy {
         this._move(event.type.indexOf('mouse') === 0 ? event : event.touches[0]);
       }
     });
+  }
+
+  ///////////////////// COLLAPSE / EXPAND
+
+  /**
+   * @deprecated
+   * @param li
+   * @param expanded
+   */
+  private _exportCollapsed(li, expanded: boolean) {
+    const item = helper._findObjectInTree(this._list, li.id);
+    if (expanded) {
+      delete item.expanded;
+    } else {
+      item.expanded = false;
+    }
+
+    this.el.nativeElement
+      .dispatchEvent(new CustomEvent('listUpdated', {
+        detail: {
+          list: this.list
+        },
+        bubbles: true
+      }));
+  }
+
+  public expandAll() {
+    const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
+    for (let i = 0; i < items.length; i++) {
+      this.expandItem(items[i]);
+    }
+  }
+
+  public collapseAll() {
+    const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
+    for (let i = 0; i < items.length; i++) {
+      this.collapseItem(items[i]);
+    }
+  }
+
+  /**
+   * deprecated
+   * @param li
+   */
+  public setParent(li) {
+    if (li.querySelectorAll(`:scope > ${this.options.listNodeName}.${this.options.listClass}`).length
+      && !li.querySelectorAll(`:scope > button`).length
+    ) {
+      li.insertAdjacentHTML('afterbegin', this.options.expandBtnHTML);
+      li.insertAdjacentHTML('afterbegin', this.options.collapseBtnHTML);
+    }
+  }
+
+  /**
+   * @deprecated
+   * @param li
+   */
+  public unsetParent(li) {
+    const childButtons = li.querySelectorAll(`:scope > [data-action]`);
+    for (let i = 0; i < childButtons.length; i++) {
+      childButtons[i].parentElement.removeChild(childButtons[i]);
+      childButtons[i].remove();
+    }
+    const list = li.querySelector(`${this.options.listNodeName}.${this.options.listClass}`);
+    list.parentElement.removeChild(list);
+    li.classList.remove(this.options.collapsedClass);
   }
 
   public expandItem(li) {
@@ -712,46 +670,6 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     if (this.options.exportCollapsed) { this._exportCollapsed(li, false); }
-  }
-
-  public toggle(e, li) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log(li);
-  }
-
-  public expandAll() {
-    const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
-    for (let i = 0; i < items.length; i++) {
-      this.expandItem(items[i]);
-    }
-  }
-
-  public collapseAll() {
-    const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
-    for (let i = 0; i < items.length; i++) {
-      this.collapseItem(items[i]);
-    }
-  }
-
-  public setParent(li) {
-    if (li.querySelectorAll(`:scope > ${this.options.listNodeName}.${this.options.listClass}`).length
-      && !li.querySelectorAll(`:scope > button`).length
-    ) {
-      li.insertAdjacentHTML('afterbegin', this.options.expandBtnHTML);
-      li.insertAdjacentHTML('afterbegin', this.options.collapseBtnHTML);
-    }
-  }
-
-  public unsetParent(li) {
-    const childButtons = li.querySelectorAll(`:scope > [data-action]`);
-    for (let i = 0; i < childButtons.length; i++) {
-      childButtons[i].parentElement.removeChild(childButtons[i]);
-      childButtons[i].remove();
-    }
-    const list = li.querySelector(`${this.options.listNodeName}.${this.options.listClass}`);
-    list.parentElement.removeChild(list);
-    li.classList.remove(this.options.collapsedClass);
   }
 
 }
