@@ -29,6 +29,7 @@ export const defaultSettings = {
 } as NestableSettings;
 
 export const mouse = {
+    moving: 0,
     offsetX: 0,
     offsetY: 0,
     startX: 0,

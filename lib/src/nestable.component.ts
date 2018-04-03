@@ -57,31 +57,41 @@ export class NestableComponent implements OnInit, OnDestroy {
   public set list(list) {
     this._list = list;
     this._generateItemIds();
-    if (this._componentActive) {
-      setTimeout(() => {
-        this.reset();
-        if (this.options.exportCollapsed) {
-          helper._traverseChildren(this._list, item => {
-            if (item.expanded === false) {
-              this.collapseItem(document.getElementById(item['$$id']));
-            }
-          });
-        }
-      }, 0);
-    }
+    // if (this._componentActive) {
+    //   setTimeout(() => {
+    //     this.reset();
+    //     if (this.options.exportCollapsed) {
+    //       helper._traverseChildren(this._list, item => {
+    //         if (item.expanded === false) {
+    //           this.collapseItem(document.getElementById(item['$$id']));
+    //         }
+    //       });
+    //     }
+    //   }, 0);
+    // }
   }
 
   public dragRootEl = null;
   public dragEl = null;
   public moving = false;
+
+  /**
+   * Dragged element contains children, and those children contain other children and so on...
+   * This property gives you the number of generations contained within the dragging item.
+   */
   public dragDepth = 0;
+
+  /**
+   * The depth of dragging item relative to element root (ngx-nestable)
+   */
   public relativeDepth = 0;
+
   public hasNewRoot = false;
   public pointEl = null;
   public items = [];
 
   private _componentActive = false;
-  private _mouse;
+  private _mouse = Object.assign({}, mouse);
   private _list = [];
   // private _options = Object.assign({}, defaultSettings) as NestableSettings;
   private _cancelMousemove: Function;
@@ -93,7 +103,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     private ref: ChangeDetectorRef,
     private renderer: Renderer2,
     private el: ElementRef,
-    private _ngZone: NgZone
+    private zone: NgZone
   ) {
     this._mouse = Object.assign({}, mouse);
   }
@@ -120,17 +130,17 @@ export class NestableComponent implements OnInit, OnDestroy {
    * listener functions to coresponding elements in list
    */
   private _init() {
-    setTimeout(() => {
-      this._createDragListeners();
-      this._createColapseListeners();
-      if (this.options.exportCollapsed) {
-        helper._traverseChildren(this._list, item => {
-          if (item.expanded === false) {
-            this.collapseItem(document.getElementById(item['$$id']));
-          }
-        });
-      }
-    }, 0);
+    // setTimeout(() => {
+    //   this._createDragListeners();
+    //   this._createColapseListeners();
+    //   if (this.options.exportCollapsed) {
+    //     helper._traverseChildren(this._list, item => {
+    //       if (item.expanded === false) {
+    //         this.collapseItem(document.getElementById(item['$$id']));
+    //       }
+    //     });
+    //   }
+    // }, 0);
 
     this._generateItemIds();
   }
@@ -197,33 +207,15 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  private _createDragClone(event) {
-    const target = event.target,
-      dragItem = helper._closest(target, this.options.itemNodeName + '.' + this.options.itemClass);
+  private _createDragClone(event, dragItem) {
+    this._mouseStart(event, dragItem);
 
-    if (dragItem === null) { return; }
-
-    const dragRect = dragItem.getBoundingClientRect();
-
-    this._mouse.offsetX = event.pageX - helper._offset(dragItem).left;
-    this._mouse.offsetY = event.pageY - helper._offset(dragItem).top;
-    this._mouse.startX = this._mouse.lastX = event.pageX;
-    this._mouse.startY = this._mouse.lastY = event.pageY;
-
+    // create drag clone
     this.dragEl = document.createElement(this.options.listNodeName);
     document.body.appendChild(this.dragEl);
 
     this.renderer.addClass(this.dragEl, this.options.dragClass);
-    this.renderer.addClass(this.dragEl, this.options.listClass);
-    this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
-
-    this._placeholder = document.createElement('div');
-    this._placeholder.classList.add(this.options.placeClass);
-    helper._insertAfter(this._placeholder, dragItem);
-    this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
-    dragItem.parentNode.removeChild(dragItem);
-    this.dragEl.appendChild(dragItem);
-    this.dragRootEl = dragItem;
+    // this.renderer.addClass(this.dragEl, this.options.listClass);
 
     // add drag clone to body and set css
     this.renderer.setStyle(this.dragEl, 'left', event.pageX - this._mouse.offsetX + PX);
@@ -232,6 +224,22 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.renderer.setStyle(this.dragEl, 'z-index', 9999);
     this.renderer.setStyle(this.dragEl, 'pointer-events', 'none');
 
+
+  }
+
+  private _createPlaceholder(event, dragItem) {
+    this._placeholder = document.createElement('div');
+    this._placeholder.classList.add(this.options.placeClass);
+    helper._insertAfter(this._placeholder, dragItem);
+    dragItem.parentNode.removeChild(dragItem);
+    this.dragEl.appendChild(dragItem);
+    this.dragRootEl = dragItem;
+  }
+
+  /**
+   * Sets depth proerties (relative and drag)
+   */
+  private _calculateDepth() {
     // total depth of dragging item
     let depth;
     const items = this.dragEl.querySelectorAll(this.options.itemNodeName);
@@ -241,22 +249,17 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     // depth relative to root
-    this.relativeDepth = helper._getParents(this._placeholder,
-      this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
-    ).length;
+    this.relativeDepth = helper._getParents(this._placeholder, this.el.nativeElement).length;
   }
 
-  // TODO remove create placeholder logic form _createDragClone
-  private _createPlaceholder() {
-
+  private _mouseStart(event, dragItem) {
+    this._mouse.offsetX = event.pageX - helper._offset(dragItem).left;
+    this._mouse.offsetY = event.pageY - helper._offset(dragItem).top;
+    this._mouse.startX = this._mouse.lastX = event.pageX;
+    this._mouse.startY = this._mouse.lastY = event.pageY;
   }
 
-  private _move(event) {
-    let depth, list, isEmpty = false;
-
-    this.renderer.setStyle(this.dragEl, 'left', event.pageX - this._mouse.offsetX + PX);
-    this.renderer.setStyle(this.dragEl, 'top', event.pageY - this._mouse.offsetY + PX);
-
+  private _mouseUpdate(event) {
     // mouse position last events
     this._mouse.lastX = this._mouse.nowX;
     this._mouse.lastY = this._mouse.nowY;
@@ -272,13 +275,35 @@ export class NestableComponent implements OnInit, OnDestroy {
     // direction mouse is now moving (on both axis)
     this._mouse.dirX = this._mouse.distX === 0 ? 0 : this._mouse.distX > 0 ? 1 : -1;
     this._mouse.dirY = this._mouse.distY === 0 ? 0 : this._mouse.distY > 0 ? 1 : -1;
+  }
+
+  /**
+   * calc mouse traverse distance on axis
+   * @param m - mouse
+   */
+  private _calcMouseDistance(m) {
+    m.distAxX += Math.abs(m.distX);
+    if (m.dirX !== 0 && m.dirX !== m.lastDirX) { m.distAxX = 0; }
+
+    m.distAxY += Math.abs(m.distY);
+    if (m.dirY !== 0 && m.dirY !== m.lastDirY) { m.distAxY = 0; }
+  }
+
+  private _move(event) {
+    let depth, list, isEmpty = false;
+
+    this.renderer.setStyle(this.dragEl, 'left', event.pageX - this._mouse.offsetX + PX);
+    this.renderer.setStyle(this.dragEl, 'top', event.pageY - this._mouse.offsetY + PX);
+
+    this._mouseUpdate(event);
+
     // axis mouse is now moving on
     const newAx = Math.abs(this._mouse.distX) > Math.abs(this._mouse.distY) ? 1 : 0;
 
     // do nothing on first move
     if (!this._mouse.moving) {
       this._mouse.dirAx = newAx;
-      this._mouse.moving = true;
+      this._mouse.moving = 1;
       return;
     }
 
@@ -287,20 +312,11 @@ export class NestableComponent implements OnInit, OnDestroy {
       this._mouse.distAxX = 0;
       this._mouse.distAxY = 0;
     } else {
-      this._mouse.distAxX += Math.abs(this._mouse.distX);
-      if (this._mouse.dirX !== 0 && this._mouse.dirX !== this._mouse.lastDirX) {
-        this._mouse.distAxX = 0;
-      }
-      this._mouse.distAxY += Math.abs(this._mouse.distY);
-      if (this._mouse.dirY !== 0 && this._mouse.dirY !== this._mouse.lastDirY) {
-        this._mouse.distAxY = 0;
-      }
+      this._calcMouseDistance(this._mouse);
     }
     this._mouse.dirAx = newAx;
 
-    /**
-     *  find list item under cursor
-     */
+    // find list item under cursor
     if (!hasPointerEvents) { this.dragEl.style.visibility = 'hidden'; }
 
     this.pointEl = document.elementFromPoint(
@@ -309,20 +325,18 @@ export class NestableComponent implements OnInit, OnDestroy {
     );
 
     if (!hasPointerEvents) { this.dragEl.style.visibility = 'visible'; }
-
-    if (this.pointEl && this.pointEl.classList.contains(this.options.handleClass)) {
+console.log(this.pointEl)
+    if (this.pointEl && this.pointEl.classList.contains('nestable-item-container')) {
       this.pointEl = helper._closest(this.pointEl, this.options.itemNodeName + '.' + this.options.itemClass);
+    } else {
+      return;
     }
 
     // get point element depth
     let pointDepth;
-    if (this.pointEl) {
-      pointDepth = helper._getParents(this.pointEl,
-        this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
-      ).length;
-
-      // if (this.options.fixedDepth && pointDepth !== this.relativeDepth) { return; }
-    } else { return; }
+    pointDepth = helper._getParents(this.pointEl,
+      this.el.nativeElement.querySelector(this.options.listNodeName + '.' + this.options.listClass)
+    ).length;
 
     /**
      * move horizontal
@@ -482,9 +496,12 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   public reset() {
-    this._mouse = Object.assign({}, mouse);
-    this._itemId = 0;
+    const keys = Object.keys(this._mouse);
+    for (const key of keys) {
+      this._mouse[key] = 0;
+    }
 
+    this._itemId = 0;
     this.moving = false;
     this.dragEl = null;
     this.dragRootEl = null;
@@ -493,81 +510,95 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.hasNewRoot = false;
     this.pointEl = null;
 
-    this._destroy(); // TODO remove
+    // this._destroy(); // TODO remove
 
-    this._createDragListeners(); // TODO remove
-    this._createColapseListeners(); // TODO remove
+    // this._createDragListeners(); // TODO remove
+    // this._createColapseListeners(); // TODO remove
   }
 
-  public dragStart(event) {
+  public dragStart(event, item, parentList) {
     event.stopPropagation();
+    event.preventDefault();
 
     if (event.originalEvent) { event = event.originalEvent; }
 
+    // allow only first mouse button
     if (event.type.indexOf('mouse') === 0) {
       if (event.button !== 0) { return; }
     } else {
       if (event.touches.length !== 1) { return; }
     }
 
-    event.preventDefault();
-    this.dragRootEl = event.target;
+    this.ref.detach();
+    parentList.splice(parentList.indexOf(item), 1);
 
-    this._ngZone.runOutsideAngular(() => {
-      this._createDragClone(event);
+    this.zone.runOutsideAngular(() => {
+      const dragItem = helper._closest(
+        event.target,
+        this.options.itemNodeName + '.' + this.options.itemClass
+      );
+
+      if (dragItem === null) { return; }
+
+      const dragRect = dragItem.getBoundingClientRect();
+
+      this._createDragClone(event, dragItem);
+      this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
+
+      this._createPlaceholder(event, dragItem);
+      this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
+
+      this._calculateDepth();
+
+      this._cancelMouseup = this.renderer.listen(document, 'mouseup', this.dragStop.bind(this));
+      this._cancelMousemove = this.renderer.listen(document, 'mousemove', this.dragMove.bind(this));
     });
-
-    this._cancelMouseup = this.renderer.listen(document, 'mouseup', this.dragStop.bind(this));
-    this._cancelMousemove = this.renderer.listen(document, 'mousemove', this.dragMove.bind(this));
-
-    // this._createPlaceholder(); // TODO
   }
 
   public dragStop(event) {
     this._cancelMouseup();
     this._cancelMousemove();
+    this.ref.reattach();
     // debugger
 
     if (!this.dragEl) { return; }
 
-    const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
+    // const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
     this.dragEl.parentNode.removeChild(this.dragEl);
-    helper._replaceTargetWithElements(this._placeholder, this.dragEl.children);
-    this.updateModelFromDOM(document.getElementById(draggedId.toString()));
-
     this.dragEl.remove();
-
     this.reset();
+    this.ref.markForCheck();
 
-    let draggedItem, parentItem;
-    helper._traverseChildren(this.list, (item, parent) => {
-      if (item['$$id'] === draggedId) {
-        draggedItem = item, parentItem = parent;
-        return true;
-      }
-    });
+    // helper._replaceTargetWithElements(this._placeholder, this.dragEl.children);
+    // this.updateModelFromDOM(document.getElementById(draggedId.toString()));
 
-    this.el.nativeElement
-      .dispatchEvent(new CustomEvent('listUpdated', {
-        detail: {
-          list: this.list,
-          draggedItem,
-          parentItem
-        },
-        bubbles: true
-      }));
+    // let draggedItem, parentItem;
+    // helper._traverseChildren(this.list, (item, parent) => {
+    //   if (item['$$id'] === draggedId) {
+    //     draggedItem = item, parentItem = parent;
+    //     return true;
+    //   }
+    // });
+
+    // this.el.nativeElement
+    //   .dispatchEvent(new CustomEvent('listUpdated', {
+    //     detail: {
+    //       list: this.list,
+    //       draggedItem,
+    //       parentItem
+    //     },
+    //     bubbles: true
+    //   }));
 
   }
 
   public dragMove(event) {
-    this._ngZone.runOutsideAngular(() => {
-      if (this.dragEl) {
-        event.preventDefault();
+    if (this.dragEl) {
+      event.preventDefault();
 
-        if (event.originalEvent) { event = event.originalEvent; }
-        this._move(event.type.indexOf('mouse') === 0 ? event : event.touches[0]);
-      }
-    });
+      if (event.originalEvent) { event = event.originalEvent; }
+      this._move(event.type.indexOf('mouse') === 0 ? event : event.touches[0]);
+    }
   }
 
   ///////////////////// COLLAPSE / EXPAND
