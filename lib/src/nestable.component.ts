@@ -21,20 +21,24 @@ import { NestableSettings } from './nestable.models';
 
 const PX = 'px';
 /**
-* Detect CSS pointer-events property
-* events are normally disabled on the dragging element to avoid conflicts
-* https://github.com/ausi/Feature-detection-technique-for-pointer-events/blob/master/modernizr-pointerevents.js
-*/
-const hasPointerEvents = (function () {
+ * Detect CSS pointer-events property
+ * events are normally disabled on the dragging element to avoid conflicts
+ * https://github.com/ausi/Feature-detection-technique-for-pointer-events/blob/master/modernizr-pointerevents.js
+ */
+const hasPointerEvents = (function() {
   const el = document.createElement('div'),
     docEl = document.documentElement;
 
-  if (!('pointerEvents' in el.style)) { return false; }
+  if (!('pointerEvents' in el.style)) {
+    return false;
+  }
 
   el.style.pointerEvents = 'auto';
   el.style.pointerEvents = 'x';
   docEl.appendChild(el);
-  const supports = window.getComputedStyle && window.getComputedStyle(el, '').pointerEvents === 'auto';
+  const supports =
+    window.getComputedStyle &&
+    window.getComputedStyle(el, '').pointerEvents === 'auto';
   docEl.removeChild(el);
   return !!supports;
 })();
@@ -47,13 +51,14 @@ const hasPointerEvents = (function () {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NestableComponent implements OnInit, OnDestroy {
-
   @Output() public listChange = new EventEmitter();
 
   @Input() public template: ViewContainerRef;
   @Input() public options = defaultSettings;
   @Input()
-  public get list() { return this._list; }
+  public get list() {
+    return this._list;
+  }
   public set list(list) {
     this._list = list;
     this._generateItemIds();
@@ -105,7 +110,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     private el: ElementRef,
     private zone: NgZone
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     // set/extend default options
@@ -121,8 +126,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._generateItemExpanded();
   }
 
-  ngOnDestroy(): void {
-  }
+  ngOnDestroy(): void {}
 
   /**
    * TODO this f should return an id number so it can be used in template
@@ -156,8 +160,16 @@ export class NestableComponent implements OnInit, OnDestroy {
     // this.renderer.addClass(this.dragEl, this.options.listClass);
 
     // add drag clone to body and set css
-    this.renderer.setStyle(this.dragEl, 'left', (event.pageX - this._mouse.offsetX) + PX);
-    this.renderer.setStyle(this.dragEl, 'top', (event.pageY - this._mouse.offsetY) + PX);
+    this.renderer.setStyle(
+      this.dragEl,
+      'left',
+      event.pageX - this._mouse.offsetX + PX
+    );
+    this.renderer.setStyle(
+      this.dragEl,
+      'top',
+      event.pageY - this._mouse.offsetY + PX
+    );
     this.renderer.setStyle(this.dragEl, 'position', 'absolute');
     this.renderer.setStyle(this.dragEl, 'z-index', 9999);
     this.renderer.setStyle(this.dragEl, 'pointer-events', 'none');
@@ -181,11 +193,16 @@ export class NestableComponent implements OnInit, OnDestroy {
     const items = this.dragEl.querySelectorAll(this.options.itemNodeName);
     for (let i = 0; i < items.length; i++) {
       depth = helper._getParents(items[i], this.dragEl).length;
-      if (depth > this.dragDepth) { this.dragDepth = depth; }
+      if (depth > this.dragDepth) {
+        this.dragDepth = depth;
+      }
     }
 
     // depth relative to root
-    this.relativeDepth = helper._getParents(this._placeholder, this.el.nativeElement).length;
+    this.relativeDepth = helper._getParents(
+      this._placeholder,
+      this.el.nativeElement
+    ).length;
   }
 
   private _mouseStart(event, dragItem) {
@@ -209,19 +226,25 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._mouse.lastDirX = this._mouse.dirX;
     this._mouse.lastDirY = this._mouse.dirY;
     // direction mouse is now moving (on both axis)
-    this._mouse.dirX = this._mouse.distX === 0 ? 0 : this._mouse.distX > 0 ? 1 : -1;
-    this._mouse.dirY = this._mouse.distY === 0 ? 0 : this._mouse.distY > 0 ? 1 : -1;
+    this._mouse.dirX =
+      this._mouse.distX === 0 ? 0 : this._mouse.distX > 0 ? 1 : -1;
+    this._mouse.dirY =
+      this._mouse.distY === 0 ? 0 : this._mouse.distY > 0 ? 1 : -1;
   }
 
   private _showMasks() {
-    const masks = this.el.nativeElement.getElementsByClassName('nestable-item-mask');
+    const masks = this.el.nativeElement.getElementsByClassName(
+      'nestable-item-mask'
+    );
     for (let i = 0; i < masks.length; i++) {
       masks[i].style.display = 'block';
     }
   }
 
   private _hideMasks() {
-    const masks = this.el.nativeElement.getElementsByClassName('nestable-item-mask');
+    const masks = this.el.nativeElement.getElementsByClassName(
+      'nestable-item-mask'
+    );
     for (let i = 0; i < masks.length; i++) {
       masks[i].style.display = 'none';
     }
@@ -233,22 +256,35 @@ export class NestableComponent implements OnInit, OnDestroy {
    */
   private _calcMouseDistance(m) {
     m.distAxX += Math.abs(m.distX);
-    if (m.dirX !== 0 && m.dirX !== m.lastDirX) { m.distAxX = 0; }
+    if (m.dirX !== 0 && m.dirX !== m.lastDirX) {
+      m.distAxX = 0;
+    }
 
     m.distAxY += Math.abs(m.distY);
-    if (m.dirY !== 0 && m.dirY !== m.lastDirY) { m.distAxY = 0; }
+    if (m.dirY !== 0 && m.dirY !== m.lastDirY) {
+      m.distAxY = 0;
+    }
   }
 
   private _move(event) {
     let depth, list;
 
-    this.renderer.setStyle(this.dragEl, 'left', event.pageX - this._mouse.offsetX + PX);
-    this.renderer.setStyle(this.dragEl, 'top', event.pageY - this._mouse.offsetY + PX);
+    this.renderer.setStyle(
+      this.dragEl,
+      'left',
+      event.pageX - this._mouse.offsetX + PX
+    );
+    this.renderer.setStyle(
+      this.dragEl,
+      'top',
+      event.pageY - this._mouse.offsetY + PX
+    );
 
     this._mouseUpdate(event);
 
     // axis mouse is now moving on
-    const newAx = Math.abs(this._mouse.distX) > Math.abs(this._mouse.distY) ? 1 : 0;
+    const newAx =
+      Math.abs(this._mouse.distX) > Math.abs(this._mouse.distY) ? 1 : 0;
 
     // do nothing on first move
     if (!this._mouse.moving) {
@@ -267,19 +303,24 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._mouse.dirAx = newAx;
 
     // find list item under cursor
-    if (!hasPointerEvents) { this.dragEl.style.visibility = 'hidden'; }
+    if (!hasPointerEvents) {
+      this.dragEl.style.visibility = 'hidden';
+    }
 
     const pointEl = document.elementFromPoint(
       event.pageX - document.body.scrollLeft,
       event.pageY - (window.pageYOffset || document.documentElement.scrollTop)
     );
 
-    if (!hasPointerEvents) { this.dragEl.style.visibility = 'visible'; }
+    if (!hasPointerEvents) {
+      this.dragEl.style.visibility = 'visible';
+    }
 
-    if (pointEl && (
-      pointEl.classList.contains('nestable-item-mask') ||
-      pointEl.classList.contains(this.options.placeClass)
-    )) {
+    if (
+      pointEl &&
+      (pointEl.classList.contains('nestable-item-mask') ||
+        pointEl.classList.contains(this.options.placeClass))
+    ) {
       this.pointEl = pointEl.parentElement.parentElement;
     } else {
       return;
@@ -288,25 +329,28 @@ export class NestableComponent implements OnInit, OnDestroy {
     /**
      * move horizontal
      */
-    if (!this.options.fixedDepth
-      && this._mouse.dirAx
-      && this._mouse.distAxX >= this.options.threshold
+    if (
+      !this.options.fixedDepth &&
+      this._mouse.dirAx &&
+      this._mouse.distAxX >= this.options.threshold
     ) {
       // reset move distance on x-axis for new phase
       this._mouse.distAxX = 0;
       const previous = this._placeholder.previousElementSibling;
 
       // increase horizontal level if previous sibling exists, is not collapsed, and can have children
-      if (this._mouse.distX > 0 && previous
+      if (
+        this._mouse.distX > 0 &&
+        previous
         // && !previous.classList.contains(this.options.collapsedClass) // cannot increase level when item above is collapsed
         // && !previous.classList.contains(this.options.noChildrenClass)
       ) {
-
         list = previous.querySelectorAll(this.options.listNodeName);
         list = list[list.length - 1];
 
         // check if depth limit has reached
-        depth = helper._getParents(this._placeholder,
+        depth = helper._getParents(
+          this._placeholder,
           this.el.nativeElement.querySelector(this.options.listNodeName)
         ).length;
 
@@ -318,11 +362,11 @@ export class NestableComponent implements OnInit, OnDestroy {
             list.appendChild(this._placeholder);
             previous.appendChild(list);
             // this.setParent(previous);
-
           } else {
-
             // else append to next level up
-            list = previous.querySelector(`:scope > ${this.options.listNodeName}`);
+            list = previous.querySelector(
+              `:scope > ${this.options.listNodeName}`
+            );
             list.appendChild(this._placeholder);
           }
         }
@@ -330,10 +374,15 @@ export class NestableComponent implements OnInit, OnDestroy {
       // decrease horizontal level
       if (this._mouse.distX < 0) {
         // we can't decrease a level if an item preceeds the current one
-        const next = document.querySelector(`.${this.options.placeClass} + ${this.options.itemNodeName}`);
+        const next = document.querySelector(
+          `.${this.options.placeClass} + ${this.options.itemNodeName}`
+        );
         const parentElement = this._placeholder.parentElement;
         if (!next && parentElement) {
-          const closestItem = helper._closest(this._placeholder, this.options.itemNodeName);
+          const closestItem = helper._closest(
+            this._placeholder,
+            this.options.itemNodeName
+          );
 
           if (closestItem) {
             parentElement.removeChild(this._placeholder);
@@ -352,37 +401,57 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     // find root list of item under cursor
-    const pointElRoot = helper._closest(this.pointEl, `.${this.options.rootClass}`),
-      isNewRoot = pointElRoot ? this.dragRootEl.dataset['nestable-id'] !== pointElRoot.dataset['nestable-id'] : false;
+    const pointElRoot = helper._closest(
+        this.pointEl,
+        `.${this.options.rootClass}`
+      ),
+      isNewRoot = pointElRoot
+        ? this.dragRootEl.dataset['nestable-id'] !==
+          pointElRoot.dataset['nestable-id']
+        : false;
 
     /**
      * move vertical
      */
     if (!this._mouse.dirAx || isNewRoot) {
       // check if groups match if dragging over new root
-      if (isNewRoot && this.options.group !== pointElRoot.dataset['nestable-group']) {
+      if (
+        isNewRoot &&
+        this.options.group !== pointElRoot.dataset['nestable-group']
+      ) {
         return;
       }
 
       // check depth limit
-      depth = this.dragDepth - 1 + helper._getParents(this.pointEl,
-        this.el.nativeElement.querySelector(this.options.listNodeName)
-      ).length;
+      depth =
+        this.dragDepth -
+        1 +
+        helper._getParents(
+          this.pointEl,
+          this.el.nativeElement.querySelector(this.options.listNodeName)
+        ).length;
 
-      if (depth > this.options.maxDepth) { return; }
+      if (depth > this.options.maxDepth) {
+        return;
+      }
 
-      const before = event.pageY < (helper._offset(this.pointEl).top + this.pointEl.clientHeight / 2);
+      const before =
+        event.pageY <
+        helper._offset(this.pointEl).top + this.pointEl.clientHeight / 2;
       const placeholderParent = this._placeholder.parentNode;
 
       // get point element depth
       let pointRelativeDepth;
-      pointRelativeDepth = helper
-        ._getParents(this.pointEl, this.el.nativeElement.querySelector(this.options.listNodeName))
-        .length;
+      pointRelativeDepth = helper._getParents(
+        this.pointEl,
+        this.el.nativeElement.querySelector(this.options.listNodeName)
+      ).length;
 
       if (this.options.fixedDepth) {
         if (pointRelativeDepth === this.relativeDepth - 1) {
-          const children = this.pointEl.querySelector(this.options.listNodeName);
+          const children = this.pointEl.querySelector(
+            this.options.listNodeName
+          );
           if (!children) {
             const newList = document.createElement(this.options.listNodeName);
             newList.classList.add(this.options.listClass);
@@ -391,13 +460,21 @@ export class NestableComponent implements OnInit, OnDestroy {
           }
         } else if (pointRelativeDepth === this.relativeDepth) {
           if (before) {
-            this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
+            this.pointEl.parentElement.insertBefore(
+              this._placeholder,
+              this.pointEl
+            );
           } else {
             helper._insertAfter(this._placeholder, this.pointEl);
           }
-        } else { return; }
+        } else {
+          return;
+        }
       } else if (before) {
-        this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
+        this.pointEl.parentElement.insertBefore(
+          this._placeholder,
+          this.pointEl
+        );
       } else {
         helper._insertAfter(this._placeholder, this.pointEl);
       }
@@ -428,39 +505,54 @@ export class NestableComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     event.preventDefault();
 
-    if (event.originalEvent) { event = event.originalEvent; }
+    if (event.originalEvent) {
+      event = event.originalEvent;
+    }
 
     // allow only first mouse button
     if (event.type.indexOf('mouse') === 0) {
-      if (event.button !== 0) { return; }
+      if (event.button !== 0) {
+        return;
+      }
     } else {
-      if (event.touches.length !== 1) { return; }
+      if (event.touches.length !== 1) {
+        return;
+      }
     }
 
     this.ref.detach();
     this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
 
-      const dragItem = helper._closest(
-        event.target,
-        this.options.itemNodeName + '.' + this.options.itemClass
-      );
+    const dragItem = helper._closest(
+      event.target,
+      this.options.itemNodeName + '.' + this.options.itemClass
+    );
 
-      if (dragItem === null) { return; }
+    if (dragItem === null) {
+      return;
+    }
 
-      const dragRect = dragItem.getBoundingClientRect();
+    const dragRect = dragItem.getBoundingClientRect();
 
-      this._showMasks();
-      this._createDragClone(event, dragItem);
-      this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
+    this._showMasks();
+    this._createDragClone(event, dragItem);
+    this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
 
-      this._createPlaceholder(event, dragItem);
-      this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
+    this._createPlaceholder(event, dragItem);
+    this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
 
-      this._calculateDepth();
+    this._calculateDepth();
 
-      this._cancelMouseup = this.renderer.listen(document, 'mouseup', this.dragStop.bind(this));
-      this._cancelMousemove = this.renderer.listen(document, 'mousemove', this.dragMove.bind(this));
-
+    this._cancelMouseup = this.renderer.listen(
+      document,
+      'mouseup',
+      this.dragStop.bind(this)
+    );
+    this._cancelMousemove = this.renderer.listen(
+      document,
+      'mousemove',
+      this.dragMove.bind(this)
+    );
   }
 
   public dragStop(event) {
@@ -469,27 +561,40 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._hideMasks();
 
     if (this.dragEl) {
-
       const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
-      let placeholderContainer = helper._closest(this._placeholder, this.options.itemNodeName);
+      let placeholderContainer = helper._closest(
+        this._placeholder,
+        this.options.itemNodeName
+      );
 
       // placeholder in root
       if (placeholderContainer === null) {
         this.list.splice(
-          Array.prototype.indexOf
-            .call(this._placeholder.parentElement.children, this._placeholder),
+          Array.prototype.indexOf.call(
+            this._placeholder.parentElement.children,
+            this._placeholder
+          ),
           0,
           { ...this.dragModel }
         );
-      } else { // palceholder nested
-        placeholderContainer = helper._findObjectInTree(this.list, Number.parseInt(placeholderContainer.id));
+      } else {
+        // palceholder nested
+        placeholderContainer = helper._findObjectInTree(
+          this.list,
+          Number.parseInt(placeholderContainer.id)
+        );
         if (!placeholderContainer.children) {
           placeholderContainer.children = [];
           placeholderContainer.children.push({ ...this.dragModel });
         } else {
-          placeholderContainer
-            .children
-            .splice(Array.prototype.indexOf.call(this._placeholder.parentElement.children, this._placeholder), 0, { ...this.dragModel });
+          placeholderContainer.children.splice(
+            Array.prototype.indexOf.call(
+              this._placeholder.parentElement.children,
+              this._placeholder
+            ),
+            0,
+            { ...this.dragModel }
+          );
         }
       }
 
@@ -506,24 +611,24 @@ export class NestableComponent implements OnInit, OnDestroy {
     if (this.dragEl) {
       event.preventDefault();
 
-      if (event.originalEvent) { event = event.originalEvent; }
+      if (event.originalEvent) {
+        event = event.originalEvent;
+      }
       this._move(event.type.indexOf('mouse') === 0 ? event : event.touches[0]);
     }
   }
 
-  // TODO
   public expandAll() {
-    // const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
-    // for (let i = 0; i < items.length; i++) {
-      //   this.expandItem(items[i]);
-      // }
-    }
+    helper._traverseChildren(this._list, item => {
+      item['$$expanded'] = true;
+    });
+    this.ref.markForCheck();
+  }
 
-  // TODO
   public collapseAll() {
-    // const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
-    // for (let i = 0; i < items.length; i++) {
-    //   this.collapseItem(items[i]);
-    // }
+    helper._traverseChildren(this._list, item => {
+      item['$$expanded'] = false;
+    });
+    this.ref.markForCheck();
   }
 }
