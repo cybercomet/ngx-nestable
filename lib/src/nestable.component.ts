@@ -158,13 +158,13 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._mouseStart(event, dragItem);
 
     const dragRect = dragItem.getBoundingClientRect();
+    this._mouse.offsetY = dragRect.height / 2;
 
     // create drag clone
     this.dragEl = document.createElement(this.options.listNodeName);
     document.body.appendChild(this.dragEl);
 
     this.renderer.addClass(this.dragEl, this.options.dragClass);
-    // this.renderer.addClass(this.dragEl, this.options.listClass);
 
     // add drag clone to body and set css
     this.renderer.setStyle(
@@ -175,7 +175,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.renderer.setStyle(
       this.dragEl,
       'top',
-      event.pageY - this._mouse.offsetY + PX
+        event.pageY - this._mouse.offsetY + PX
     );
     this.renderer.setStyle(this.dragEl, 'position', 'absolute');
     this.renderer.setStyle(this.dragEl, 'z-index', 9999);
@@ -276,6 +276,8 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _move(event) {
     let depth, list;
 
+    const dragRect = this.dragEl.getBoundingClientRect();
+    this._mouse.offsetY = dragRect.height / 2;
     this.renderer.setStyle(
       this.dragEl,
       'left',
@@ -284,7 +286,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.renderer.setStyle(
       this.dragEl,
       'top',
-      event.pageY - this._mouse.offsetY + PX
+        event.pageY - this._mouse.offsetY + PX
     );
 
     this._mouseUpdate(event);
@@ -615,6 +617,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   public dragMove(event) {
+
     if (this.dragEl) {
       event.preventDefault();
 
