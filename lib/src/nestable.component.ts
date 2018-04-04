@@ -16,7 +16,7 @@ import {
 
 import * as helper from './nestable.helper';
 
-import { defaultSettings, mouse } from './nestable.constant';
+import { defaultSettings, mouse, REGISTER_HANDLE } from './nestable.constant';
 import { NestableSettings } from './nestable.models';
 
 const PX = 'px';
@@ -119,14 +119,12 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     this._generateItemIds();
     this._generateItemExpanded();
+    this._createHandleListener();
   }
 
   ngOnDestroy(): void {
   }
 
-  /**
-   * TODO this f should return an id number so it can be used in template
-   */
   private _generateItemIds() {
     helper._traverseChildren(this._list, item => {
       item['$$id'] = this._itemId++;
@@ -141,6 +139,15 @@ export class NestableComponent implements OnInit, OnDestroy {
         item['$$expanded'] = item.expanded;
       }
     });
+  }
+
+  private _createHandleListener() {
+    console.log('listening');
+    this.renderer.listen(
+      this.el.nativeElement,
+      REGISTER_HANDLE, () => {
+        console.log('custom handle');
+      });
   }
 
   private _createDragClone(event, dragItem) {
@@ -440,26 +447,26 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.ref.detach();
     this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
 
-      const dragItem = helper._closest(
-        event.target,
-        this.options.itemNodeName + '.' + this.options.itemClass
-      );
+    const dragItem = helper._closest(
+      event.target,
+      this.options.itemNodeName + '.' + this.options.itemClass
+    );
 
-      if (dragItem === null) { return; }
+    if (dragItem === null) { return; }
 
-      const dragRect = dragItem.getBoundingClientRect();
+    const dragRect = dragItem.getBoundingClientRect();
 
-      this._showMasks();
-      this._createDragClone(event, dragItem);
-      this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
+    this._showMasks();
+    this._createDragClone(event, dragItem);
+    this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
 
-      this._createPlaceholder(event, dragItem);
-      this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
+    this._createPlaceholder(event, dragItem);
+    this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
 
-      this._calculateDepth();
+    this._calculateDepth();
 
-      this._cancelMouseup = this.renderer.listen(document, 'mouseup', this.dragStop.bind(this));
-      this._cancelMousemove = this.renderer.listen(document, 'mousemove', this.dragMove.bind(this));
+    this._cancelMouseup = this.renderer.listen(document, 'mouseup', this.dragStop.bind(this));
+    this._cancelMousemove = this.renderer.listen(document, 'mousemove', this.dragMove.bind(this));
 
   }
 
@@ -515,9 +522,9 @@ export class NestableComponent implements OnInit, OnDestroy {
   public expandAll() {
     // const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
     // for (let i = 0; i < items.length; i++) {
-      //   this.expandItem(items[i]);
-      // }
-    }
+    //   this.expandItem(items[i]);
+    // }
+  }
 
   // TODO
   public collapseAll() {

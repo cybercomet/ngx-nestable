@@ -8,6 +8,6 @@ import { NestableExpandDirective } from './nestable-expand/nestable-expand.direc
 @NgModule({
     imports: [CommonModule],
     declarations: [NestableComponent, NestableDragHandleDirective, NestableExpandDirective],
-    exports: [NestableComponent]
+    exports: [NestableComponent, NestableDragHandleDirective, NestableExpandDirective]
 })
 export class NestableModule { }

@@ -1,18 +1,24 @@
-import { Directive, OnInit, ElementRef } from '@angular/core';
+import { Directive, OnInit, ElementRef, HostListener, Input } from '@angular/core';
+
+import { REGISTER_HANDLE } from '../nestable.constant';
 
 @Directive({
   selector: '[ngxNestableDragHandle]'
 })
 export class NestableDragHandleDirective implements OnInit {
 
-  static readonly REGISTER: 'NESTABLE_DRAG_HANDLE_REGISTER';
+  @Input() public ngxNestableDragHandle;
+
+  @HostListener('mousedown') public onMouseDown() {
+
+  }
 
   constructor(private _el: ElementRef) { }
 
   ngOnInit(): void {
     this._el.nativeElement
       .dispatchEvent(new CustomEvent(
-        NestableDragHandleDirective.REGISTER,
+        REGISTER_HANDLE,
         { bubbles: true }
       ));
   }
