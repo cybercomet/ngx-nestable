@@ -2,15 +2,13 @@
 </ng-container>
 
 <ng-template #nestableList let-nestable="nestable" let-depth="depth">
-  <ul [style.padding-left.px]="depth ? options.threshold : 0"
-    [class]="options.listClass">
-    <li [class]="options.itemClass" [id]="item.$$id"
-      *ngFor="let item of nestable">
-    
+  <ul [style.padding-left.px]="depth ? options.threshold : 0" [class]="options.listClass">
+    <li [class]="options.itemClass" [id]="item.$$id" *ngFor="let item of nestable">
+
       <ng-container *ngTemplateOutlet="nestableItem; context:{nestable: nestable, item: item, depth: depth}">
       </ng-container>
 
-      <ng-container *ngIf="item?.children">
+      <ng-container *ngIf="item.children && item.$$expanded">
         <ng-container *ngTemplateOutlet="nestableList; context:{nestable: item.children, depth: depth + 1}">
         </ng-container>
       </ng-container>
@@ -20,6 +18,9 @@
 
 <ng-template #nestableItem let-parentList="nestable" let-item="item" let-depth="depth">
   <div class="nestable-item-container" (mousedown)="dragStart($event, item, parentList)">
+    <ng-container *ngIf="item.children">
+      <button (mousedown)="$event.stopPropagation()" (click)="item.$$expanded = !item.$$expanded">{{item.$$expanded ? '-' : '+'}}</button>
+    </ng-container>
     <ng-container *ngTemplateOutlet="template; context:{$implicit: item, depth: depth}">
     </ng-container>
 

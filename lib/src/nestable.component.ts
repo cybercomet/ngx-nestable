@@ -144,6 +144,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     // }, 0);
 
     this._generateItemIds();
+    this._generateItemExpanded();
   }
 
   /**
@@ -194,6 +195,17 @@ export class NestableComponent implements OnInit, OnDestroy {
       item['$$id'] = this._itemId++;
       // if (!item.children) { item.children = []; }
     });
+  }
+
+  private _generateItemExpanded() {
+    helper._traverseChildren(this._list, item => {
+      if (item.expanded === undefined) {
+        item['$$expanded'] = true;
+      } else {
+        item['$$expanded'] = item.expanded;
+      }
+    });
+    console.log(this._list);
   }
 
   /**
