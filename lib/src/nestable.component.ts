@@ -105,11 +105,10 @@ export class NestableComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     private el: ElementRef,
     private zone: NgZone
-  ) {
-    this._mouse = Object.assign({}, mouse);
-  }
+  ) { }
 
-  ngOnInit() {
+  ngOnInit(): void {
+    // set/extend default options
     this._componentActive = true;
     const optionKeys = Object.keys(defaultSettings);
     for (const key of optionKeys) {
@@ -117,74 +116,12 @@ export class NestableComponent implements OnInit, OnDestroy {
         this.options[key] = defaultSettings[key];
       }
     }
-    this._init();
-
-  }
-
-  ngOnDestroy(): void {
-    this._destroy();
-  }
-
-  /**
-   * @deprecated
-   * set mousedown listener for all DOM items, and bind remove event
-   * listener functions to coresponding elements in list
-   */
-  private _init() {
-    // setTimeout(() => {
-    //   this._createDragListeners();
-    //   this._createColapseListeners();
-    //   if (this.options.exportCollapsed) {
-    //     helper._traverseChildren(this._list, item => {
-    //       if (item.expanded === false) {
-    //         this.collapseItem(document.getElementById(item['$$id']));
-    //       }
-    //     });
-    //   }
-    // }, 0);
 
     this._generateItemIds();
     this._generateItemExpanded();
   }
 
-  /**
-   * @deprecated
-   */
-  private _createDragListeners() {
-    const itemsDom = this.el.nativeElement.getElementsByClassName(this.options.itemClass);
-    for (let i = 0; i < itemsDom.length; i++) {
-      if (itemsDom[i].querySelectorAll(`:scope > ${this.options.listNodeName}`).length
-        && !itemsDom[i].querySelectorAll(`:scope > button`).length
-      ) {
-        itemsDom[i].insertAdjacentHTML('afterbegin', this.options.expandBtnHTML);
-        itemsDom[i].insertAdjacentHTML('afterbegin', this.options.collapseBtnHTML);
-      }
-
-      this.items[i] = {
-        destroy: this.renderer.listen(itemsDom[i], 'mousedown', this.dragStart.bind(this)),
-        el: itemsDom[i]
-      };
-    }
-  }
-
-  /**
-   * @deprecated
-   */
-  private _createColapseListeners() {
-    const childButtons = this.el.nativeElement.querySelectorAll('[data-action]');
-    for (let i = 0; i < childButtons.length; i++) {
-      this.renderer.listen(childButtons[i], 'mousedown', e => {
-        e.stopPropagation();
-
-        const action = e.target.dataset['action'];
-        if (action === 'collapse') {
-          this.collapseItem(e.target.parentElement);
-        }
-        if (action === 'expand') {
-          this.expandItem(e.target.parentElement);
-        }
-      });
-    }
+  ngOnDestroy(): void {
   }
 
   /**
@@ -193,31 +130,17 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _generateItemIds() {
     helper._traverseChildren(this._list, item => {
       item['$$id'] = this._itemId++;
-      // if (!item.children) { item.children = []; }
     });
   }
 
   private _generateItemExpanded() {
     helper._traverseChildren(this._list, item => {
-      if (item.expanded === undefined) {
+      if (typeof item.expanded === 'undefined') {
         item['$$expanded'] = true;
       } else {
         item['$$expanded'] = item.expanded;
       }
     });
-    console.log(this._list);
-  }
-
-  /**
-   * @deprecated
-   */
-  private _destroy(el?) {
-    if (typeof el === 'undefined') {
-      for (const i of this.items) { i.destroy(); }
-    } else {
-      const target = this.items.find(i => i.el === el);
-      if (target) { target.destroy(); }
-    }
   }
 
   private _createDragClone(event, dragItem) {
@@ -395,8 +318,9 @@ export class NestableComponent implements OnInit, OnDestroy {
             list.appendChild(this._placeholder);
             previous.appendChild(list);
             // this.setParent(previous);
+
           } else {
-            console.log('has list');
+
             // else append to next level up
             list = previous.querySelector(`:scope > ${this.options.listNodeName}`);
             list.appendChild(this._placeholder);
@@ -416,9 +340,9 @@ export class NestableComponent implements OnInit, OnDestroy {
             helper._insertAfter(this._placeholder, closestItem);
           }
 
-          if (!parentElement.children.length) {
-            // this.unsetParent(parentElement.parentElement);
-          }
+          // if (!parentElement.children.length) {
+          //   // this.unsetParent(parentElement.parentElement);
+          // }
         }
       }
     }
@@ -478,52 +402,10 @@ export class NestableComponent implements OnInit, OnDestroy {
         helper._insertAfter(this._placeholder, this.pointEl);
       }
 
-      if (!placeholderParent.children.length) {
-        this.unsetParent(placeholderParent.parentElement);
-      }
+      // if (!placeholderParent.children.length) {
+      //   // this.unsetParent(placeholderParent.parentElement);
+      // }
     }
-  }
-
-  /**
-   * @deprecated
-   * @param draggedEl
-   */
-  public updateModelFromDOM(draggedEl) {
-    const tempArray = [...this._list];
-
-    // empty model array
-    this._list.length = 0;
-
-    const list = this.el.nativeElement
-      .querySelector(`${this.options.listNodeName}`)
-      .children;
-
-    helper._traverseChildren(list, item => {
-      if (item.nodeName === 'LI') {
-        if (!item.parentElement.parentElement.id) {
-          const child = Object.assign({}, helper._findObjectInTree(tempArray, item.id));
-          delete child.children;
-          this._list.push(child);
-
-          if (!item.querySelector(`:scope > ${this.options.listNodeName}`)) {
-            delete child.expanded;
-          }
-
-        } else {
-          const parent = helper._findObjectInTree(this._list, item.parentElement.parentElement.id);
-          if (!parent.children) { parent.children = []; }
-
-          const child = Object.assign({}, helper._findObjectInTree(tempArray, item.id));
-          delete child.children;
-
-          parent.children.push(child);
-
-          if (!item.querySelector(`:scope > ${this.options.listNodeName}`)) {
-            delete child.expanded;
-          }
-        }
-      }
-    });
   }
 
   public reset() {
@@ -540,11 +422,6 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.relativeDepth = 0;
     this.hasNewRoot = false;
     this.pointEl = null;
-
-    // this._destroy(); // TODO remove
-
-    // this._createDragListeners(); // TODO remove
-    // this._createColapseListeners(); // TODO remove
   }
 
   public dragStart(event, item, parentList) {
@@ -634,106 +511,19 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  ///////////////////// COLLAPSE / EXPAND
-
-  /**
-   * @deprecated
-   * @param li
-   * @param expanded
-   */
-  private _exportCollapsed(li, expanded: boolean) {
-    const item = helper._findObjectInTree(this._list, li.id);
-    if (expanded) {
-      delete item.expanded;
-    } else {
-      item.expanded = false;
-    }
-
-    this.el.nativeElement
-      .dispatchEvent(new CustomEvent('listUpdated', {
-        detail: {
-          list: this.list
-        },
-        bubbles: true
-      }));
-  }
-
+  // TODO
   public expandAll() {
-    const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
-    for (let i = 0; i < items.length; i++) {
-      this.expandItem(items[i]);
+    // const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
+    // for (let i = 0; i < items.length; i++) {
+      //   this.expandItem(items[i]);
+      // }
     }
-  }
 
+  // TODO
   public collapseAll() {
-    const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
-    for (let i = 0; i < items.length; i++) {
-      this.collapseItem(items[i]);
-    }
+    // const items = document.querySelectorAll(`${this.options.itemNodeName}.${this.options.itemClass}`);
+    // for (let i = 0; i < items.length; i++) {
+    //   this.collapseItem(items[i]);
+    // }
   }
-
-  /**
-   * deprecated
-   * @param li
-   */
-  public setParent(li) {
-    if (li.querySelectorAll(`:scope > ${this.options.listNodeName}`).length
-      && !li.querySelectorAll(`:scope > button`).length
-    ) {
-      li.insertAdjacentHTML('afterbegin', this.options.expandBtnHTML);
-      li.insertAdjacentHTML('afterbegin', this.options.collapseBtnHTML);
-    }
-  }
-
-  /**
-   * @deprecated
-   * @param li
-   */
-  public unsetParent(li) {
-    const childButtons = li.querySelectorAll(`:scope > [data-action]`);
-    for (let i = 0; i < childButtons.length; i++) {
-      childButtons[i].parentElement.removeChild(childButtons[i]);
-      childButtons[i].remove();
-    }
-    const list = li.querySelector(`${this.options.listNodeName}`);
-    list.parentElement.removeChild(list);
-    li.classList.remove(this.options.collapsedClass);
-  }
-
-  public expandItem(li) {
-    li.classList.remove(this.options.collapsedClass);
-
-    const childButtons = li.querySelectorAll(`:scope > [data-action]`);
-    for (let i = 0; i < childButtons.length; i++) {
-      const action = childButtons[i].dataset['action'];
-      if (action === 'collapse') {
-        childButtons[i].style.display = 'block';
-      }
-      if (action === 'expand') {
-        childButtons[i].style.display = 'none';
-      }
-    }
-
-    if (this.options.exportCollapsed) { this._exportCollapsed(li, true); }
-  }
-
-  public collapseItem(li) {
-    const lists = li.querySelectorAll(`:scope > ${this.options.listNodeName}`);
-    if (lists.length) {
-      li.classList.add(this.options.collapsedClass);
-    }
-    const childButtons = li.querySelectorAll(`:scope > [data-action]`);
-    for (let i = 0; i < childButtons.length; i++) {
-      const action = childButtons[i].dataset['action'];
-      if (action === 'collapse') {
-        childButtons[i].style.display = 'none';
-      }
-      if (action === 'expand') {
-        childButtons[i].style.display = 'block';
-      }
-    }
-
-    if (this.options.exportCollapsed) { this._exportCollapsed(li, false); }
-  }
-
 }
