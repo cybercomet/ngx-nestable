@@ -2,9 +2,9 @@
 </ng-container>
 
 <ng-template #nestableList let-nestable="nestable" let-depth="depth">
-  <ul [class]="options.listClass" *ngIf="nestable?.length">
-    <li [style.padding-left.px]="depth ? options.threshold : 0" 
-      [class]="options.itemClass" [id]="item.$$id"
+  <ul [style.padding-left.px]="depth ? options.threshold : 0"
+    [class]="options.listClass">
+    <li [class]="options.itemClass" [id]="item.$$id"
       *ngFor="let item of nestable">
     
       <ng-container *ngTemplateOutlet="nestableItem; context:{nestable: nestable, item: item, depth: depth}">
@@ -19,9 +19,10 @@
 </ng-template>
 
 <ng-template #nestableItem let-parentList="nestable" let-item="item" let-depth="depth">
-  <div (mousedown)="dragStart($event, item, parentList)">
+  <div class="nestable-item-container" (mousedown)="dragStart($event, item, parentList)">
     <ng-container *ngTemplateOutlet="template; context:{$implicit: item, depth: depth}">
     </ng-container>
+
+    <div class="nestable-item-mask"></div>
   </div>
-  <div class="nestable-item-mask"></div>
 </ng-template>

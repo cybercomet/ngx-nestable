@@ -22,10 +22,11 @@
   <div fxFlex fxLayout="row" fxLayout.lt-sm="column" fxFlexOffset="16px">
     <ngx-nestable [(list)]="list" #nestable
       [options]="options"
-      [template]="itemTemplate" fxFlex>
+      [template]="itemTemplate" fxFlex="50">
     </ngx-nestable>
     
-    <div fxFlex="1 1 auto" fxFlexOffset="16px" fxFlexOffset.lt-sm="0px">
+    <div style="position: fixed; left: 50%; height: calc(100vh - 150px); width: calc(50% - 30px);"
+      fxFlex="1 1 auto" fxFlexOffset="16px" fxFlexOffset.lt-sm="0px">
       <textarea fxFlex>{{list | json}}</textarea>
     </div>
   </div>

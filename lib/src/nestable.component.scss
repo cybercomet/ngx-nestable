@@ -68,9 +68,19 @@
 // .socialite { display: block; float: left; height: 35px; }
 ul {
     li {
+        .nestable-item-container { position: relative; }
+
+        .nestable-item-mask {
+            display: none;
+            position: absolute;
+            top: 0; bottom: 0;
+            right: 0; left: 0;
+            z-index: 9998;
+        }        
+
         button { 
             display: block; 
-            position: relative; 
+            position: relative;            
             cursor: pointer; 
             float: left; 
             width: 25px; 
