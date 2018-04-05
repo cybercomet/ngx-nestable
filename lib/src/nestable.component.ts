@@ -157,8 +157,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _createDragClone(event, dragItem) {
     this._mouseStart(event, dragItem);
 
-    const dragRect = dragItem.getBoundingClientRect();
-    this._mouse.offsetY = dragRect.height / 2;
+    this._mouse.offsetY = dragItem.nextElementSibling ? dragItem.nextElementSibling.clientHeight / 2 : dragItem.clientHeight / 2;
 
     // create drag clone
     this.dragEl = document.createElement(this.options.listNodeName);
