@@ -13,7 +13,7 @@ ul {
             z-index: 9998;
         }        
 
-        button { 
+        .nestable-expand-button { 
             display: block; 
             position: relative;            
             cursor: pointer; 
@@ -32,12 +32,11 @@ ul {
             outline: 0;
         }
 
-        .nestable-item-container{
+        .nestable-item-container {
             position: relative;
             display: flex;
             flex-direction: row;
             align-items: center;
-            background: #eee; // TODO Set to theme
             color: rgba(0,0,0,.87);
             min-height: 32px;
             font-size: 16px;
