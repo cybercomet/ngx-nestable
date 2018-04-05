@@ -60,9 +60,7 @@ body {
 	line-height: 1;
 	background-color: mat-color(map-get($candy-app-theme, background), background);
 }
-ol, ul {
-	list-style: none;
-}
+
 blockquote, q {
 	quotes: none;
 }
