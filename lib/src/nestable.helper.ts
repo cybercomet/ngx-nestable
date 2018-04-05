@@ -7,7 +7,7 @@ export const _traverseChildren = (tree, callback, parent = null) => {
         if (callbackResult) { break; }
 
         if (item.children) {
-            this._traverseChildren(item.children, callback, item);
+            _traverseChildren(item.children, callback, item);
         }
     }
 };
