@@ -277,7 +277,6 @@ export class NestableComponent implements OnInit, OnDestroy {
     let depth, list;
 
     const dragRect = this.dragEl.getBoundingClientRect();
-    this._mouse.offsetY = dragRect.height / 2;
     this.renderer.setStyle(
       this.dragEl,
       'left',
