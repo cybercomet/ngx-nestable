@@ -94,7 +94,7 @@ export const _offset = (elem) => {
 export const _findObjectInTree = (array, id) => {
     let result = null;
 
-    this._traverseChildren(array, item => {
+    _traverseChildren(array, item => {
         if (item['$$id'] === Number.parseInt(id)) {
             result = item;
             return true;
