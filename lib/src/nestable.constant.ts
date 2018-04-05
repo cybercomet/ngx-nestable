@@ -1,6 +1,7 @@
 import { NestableSettings } from './nestable.models';
 
 export const REGISTER_HANDLE = 'NESTABLE_DRAG_HANDLE_REGISTER';
+export const DRAG_START = 'NESTABLE_DRAG_HANDLE_START';
 
 export const defaultSettings = {
     listNodeName: 'ul',

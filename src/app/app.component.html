@@ -32,9 +32,9 @@
   </div>
 </div>
 
-<ng-template #itemTemplate let-item>
-  <button mat-icon-button [ngxNestableDragHandle]="item">
+<ng-template #itemTemplate let-row>
+  <button mat-icon-button [ngxNestableDragHandle]="row">
     <mat-icon>drag_handle</mat-icon>
   </button>
-  <div>Item: {{item.id}}</div>
+  <div>Item: {{row.item.id}}</div>
 </ng-template>

@@ -16,15 +16,15 @@ import {
 
 import * as helper from './nestable.helper';
 
-import { defaultSettings, mouse, REGISTER_HANDLE } from './nestable.constant';
+import {
+  defaultSettings,
+  mouse,
+  REGISTER_HANDLE,
+  DRAG_START
+} from './nestable.constant';
 import { NestableSettings } from './nestable.models';
 
 const PX = 'px';
-/**
- * Detect CSS pointer-events property
- * events are normally disabled on the dragging element to avoid conflicts
- * https://github.com/ausi/Feature-detection-technique-for-pointer-events/blob/master/modernizr-pointerevents.js
- */
 const hasPointerEvents = (function() {
   const el = document.createElement('div'),
     docEl = document.documentElement;
@@ -62,18 +62,6 @@ export class NestableComponent implements OnInit, OnDestroy {
   public set list(list) {
     this._list = list;
     this._generateItemIds();
-    // if (this._componentActive) {
-    //   setTimeout(() => {
-    //     this.reset();
-    //     if (this.options.exportCollapsed) {
-    //       helper._traverseChildren(this._list, item => {
-    //         if (item.expanded === false) {
-    //           this.collapseItem(document.getElementById(item['$$id']));
-    //         }
-    //       });
-    //     }
-    //   }, 0);
-    // }
   }
 
   public dragRootEl = null;
@@ -104,6 +92,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _cancelMouseup: Function;
   private _placeholder;
   private _itemId = 0;
+  private _registerHandleDirective = false;
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -146,18 +135,21 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   private _createHandleListener() {
-    console.log('listening');
-    this.renderer.listen(
-      this.el.nativeElement,
-      REGISTER_HANDLE, () => {
-        console.log('custom handle');
-      });
+    this.renderer.listen(this.el.nativeElement, REGISTER_HANDLE, () => {
+      this._registerHandleDirective = true;
+    });
+
+    this.renderer.listen(this.el.nativeElement, DRAG_START, (data) => {
+      this.dragStart(data.detail.event, data.detail.param.item, data.detail.param.parentList);
+    });
   }
 
   private _createDragClone(event, dragItem) {
     this._mouseStart(event, dragItem);
 
-    this._mouse.offsetY = dragItem.nextElementSibling ? dragItem.nextElementSibling.clientHeight / 2 : dragItem.clientHeight / 2;
+    this._mouse.offsetY = dragItem.nextElementSibling
+      ? dragItem.nextElementSibling.clientHeight / 2
+      : dragItem.clientHeight / 2;
 
     // create drag clone
     this.dragEl = document.createElement(this.options.listNodeName);
@@ -174,7 +166,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.renderer.setStyle(
       this.dragEl,
       'top',
-        event.pageY - this._mouse.offsetY + PX
+      event.pageY - this._mouse.offsetY + PX
     );
     this.renderer.setStyle(this.dragEl, 'position', 'absolute');
     this.renderer.setStyle(this.dragEl, 'z-index', 9999);
@@ -284,7 +276,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.renderer.setStyle(
       this.dragEl,
       'top',
-        event.pageY - this._mouse.offsetY + PX
+      event.pageY - this._mouse.offsetY + PX
     );
 
     this._mouseUpdate(event);
@@ -346,12 +338,7 @@ export class NestableComponent implements OnInit, OnDestroy {
       const previous = this._placeholder.previousElementSibling;
 
       // increase horizontal level if previous sibling exists, is not collapsed, and can have children
-      if (
-        this._mouse.distX > 0 &&
-        previous
-        // && !previous.classList.contains(this.options.collapsedClass) // cannot increase level when item above is collapsed
-        // && !previous.classList.contains(this.options.noChildrenClass)
-      ) {
+      if (this._mouse.distX > 0 && previous) {
         list = previous.querySelectorAll(this.options.listNodeName);
         list = list[list.length - 1];
 
@@ -395,10 +382,6 @@ export class NestableComponent implements OnInit, OnDestroy {
             parentElement.removeChild(this._placeholder);
             helper._insertAfter(this._placeholder, closestItem);
           }
-
-          // if (!parentElement.children.length) {
-          //   // this.unsetParent(parentElement.parentElement);
-          // }
         }
       }
     }
@@ -485,10 +468,6 @@ export class NestableComponent implements OnInit, OnDestroy {
       } else {
         helper._insertAfter(this._placeholder, this.pointEl);
       }
-
-      // if (!placeholderParent.children.length) {
-      //   // this.unsetParent(placeholderParent.parentElement);
-      // }
     }
   }
 
@@ -508,7 +487,13 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.pointEl = null;
   }
 
-  public dragStart(event, item, parentList) {
+  public dragStartFromItem(event, item, parentList) {
+    if (!this._registerHandleDirective) {
+      this.dragStart(event, item, parentList);
+    }
+  }
+
+  private dragStart(event, item, parentList) {
     event.stopPropagation();
     event.preventDefault();
 
@@ -615,7 +600,6 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   public dragMove(event) {
-
     if (this.dragEl) {
       event.preventDefault();
 
