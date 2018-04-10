@@ -59,4 +59,12 @@ export class AppComponent {
   public toggleFixedDepth() {
     this.options.fixedDepth = !this.options.fixedDepth;
   }
+
+  public drag(e) {
+    console.log(e);
+  }
+
+  public drop(e) {
+    console.log(e);
+  }
 }

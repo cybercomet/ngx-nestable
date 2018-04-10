@@ -52,6 +52,8 @@ const hasPointerEvents = (function () {
 })
 export class NestableComponent implements OnInit, OnDestroy {
   @Output() public listChange = new EventEmitter();
+  @Output() public drop = new EventEmitter();
+  @Output() public drag = new EventEmitter();
 
   @Input() public template: ViewContainerRef;
   @Input() public options = defaultSettings;
@@ -511,11 +513,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.ref.detach();
     this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
 
-    const dragItem = helper._closest(
-      event.target,
-      this.options.itemNodeName + '.' + this.options.itemClass
-    );
-
+    const dragItem = helper._closest(event.target, this.options.itemNodeName);
     if (dragItem === null) {
       return;
     }
@@ -530,6 +528,10 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
 
     this._calculateDepth();
+    this.drag.emit({
+      originalEvent: event,
+      item
+    });
 
     this._cancelMouseup = this.renderer.listen(
       document,
@@ -591,6 +593,12 @@ export class NestableComponent implements OnInit, OnDestroy {
       this.dragEl.remove();
       this.reset();
 
+      this.listChange.emit(this.list);
+      this.drop.emit({
+        originalEvent: event,
+        destination: placeholderContainer,
+        item: this.dragModel
+      });
       this.ref.reattach();
     }
   }
