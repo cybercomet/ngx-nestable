@@ -27,10 +27,13 @@
     }
   }
   .dd-dragel {
-    background-color: mat-color($accent, 100);
+    background-color: rgba(mat-color($primary, 100), 0.5);
     border: 2px dashed mat-color($primary, 500);
-    button {
-      display: none;
+    .ngx-nestable-hidden, button {
+      visibility: hidden;
+    }
+    .ngx-nestable-none {
+        display: none;
     }
   }
 }
