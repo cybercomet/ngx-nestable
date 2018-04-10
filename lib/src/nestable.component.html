@@ -2,7 +2,8 @@
 </ng-container>
 
 <ng-template #nestableList let-nestable="nestable" let-depth="depth">
-  <ul [style.padding-left.px]="depth ? options.threshold : 0" [class]="options.listClass">
+  <ul [style.padding-left.px]="depth ? options.threshold : 0"
+    [class]="options.listClass">
     <li [class]="options.itemClass" [id]="item.$$id" *ngFor="let item of nestable">
 
       <ng-container *ngTemplateOutlet="nestableItem; context:{nestable: nestable, item: item, depth: depth}">
@@ -12,6 +13,8 @@
         <ng-container *ngTemplateOutlet="nestableList; context:{nestable: item.children, depth: depth + 1}">
         </ng-container>
       </ng-container>
+
+      <ul [class]="options.listClass" [style.padding-left.px]="options.threshold"></ul>
     </li>
   </ul>
 </ng-template>

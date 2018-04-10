@@ -10,7 +10,7 @@ export class AppComponent {
 
   public idCount = 13;
   public options = {
-    fixedDepth: false
+    fixedDepth: true
   } as NestableSettings;
   public list = [
     { 'id': 1 },
@@ -38,8 +38,8 @@ export class AppComponent {
         { 'id': 13 }
       ]
     },
-    { 'id': 13 },
-    { 'id': 14 }
+    { 'id': 14 },
+    { 'id': 15 }
   ];
 
   constructor(

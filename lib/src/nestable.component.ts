@@ -25,7 +25,7 @@ import {
 import { NestableSettings } from './nestable.models';
 
 const PX = 'px';
-const hasPointerEvents = (function() {
+const hasPointerEvents = (function () {
   const el = document.createElement('div'),
     docEl = document.documentElement;
 
@@ -99,7 +99,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     private el: ElementRef,
     private zone: NgZone
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // set/extend default options
@@ -116,7 +116,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._createHandleListener();
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   private _generateItemIds() {
     helper._traverseChildren(this._list, item => {
@@ -201,7 +201,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     // depth relative to root
     this.relativeDepth = helper._getParents(
       this._placeholder,
-      this.el.nativeElement
+      this.el.nativeElement.querySelector(this.options.listNodeName)
     ).length;
   }
 
@@ -394,12 +394,12 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     // find root list of item under cursor
     const pointElRoot = helper._closest(
-        this.pointEl,
-        `.${this.options.rootClass}`
-      ),
+      this.pointEl,
+      `.${this.options.rootClass}`
+    ),
       isNewRoot = pointElRoot
         ? this.dragRootEl.dataset['nestable-id'] !==
-          pointElRoot.dataset['nestable-id']
+        pointElRoot.dataset['nestable-id']
         : false;
 
     /**
@@ -441,14 +441,9 @@ export class NestableComponent implements OnInit, OnDestroy {
 
       if (this.options.fixedDepth) {
         if (pointRelativeDepth === this.relativeDepth - 1) {
-          const children = this.pointEl.querySelector(
-            this.options.listNodeName
-          );
-          if (!children) {
-            const newList = document.createElement(this.options.listNodeName);
-            newList.classList.add(this.options.listClass);
-            newList.appendChild(this._placeholder);
-            this.pointEl.appendChild(newList);
+          const childList = this.pointEl.querySelector(this.options.listNodeName);
+          if (!childList.children.length) {
+            childList.appendChild(this._placeholder);
           }
         } else if (pointRelativeDepth === this.relativeDepth) {
           if (before) {
@@ -459,9 +454,8 @@ export class NestableComponent implements OnInit, OnDestroy {
           } else {
             helper._insertAfter(this._placeholder, this.pointEl);
           }
-        } else {
-          return;
         }
+
       } else if (before) {
         this.pointEl.parentElement.insertBefore(
           this._placeholder,
