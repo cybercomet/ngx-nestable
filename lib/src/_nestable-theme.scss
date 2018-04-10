@@ -1,29 +1,36 @@
 @mixin nestable-theme($theme) {
-    $primary: map-get($theme, primary);
-    $accent: map-get($theme, accent);
-    $warn: map-get($theme, warn);
-    $foreground: map-get($theme, foreground);
-    $background: map-get($theme, background);
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $foreground: map-get($theme, foreground);
+  $background: map-get($theme, background);
 
-    ngx-nestable {
-        ul {        
-            .dd-placeholder {
-                background: mat-color($primary, 200);
-            }
-            li {
-                .nestable-expand-button {
-                    color: mat-color($foreground, 'text');
-                }
-                .nestable-item-container {
-                    background: mat-color($background, card);
-                    color: mat-color($foreground, 'text');
-                }
-            
-                .nestable-item-container:hover {
-                    background: mat-color($background, 'hover');
-                    color: mat-color($foreground, 'text');
-                }
-            }
+  ngx-nestable {
+    ul {
+      .dd-placeholder {
+        background: mat-color($primary, 200);
+      }
+      li {
+        .nestable-expand-button {
+          color: mat-color($foreground, 'text');
         }
+        .nestable-item-container {
+          background: mat-color($background, card);
+          color: mat-color($foreground, 'text');
+        }
+
+        .nestable-item-container:hover {
+          background: mat-color($background, 'hover');
+          color: mat-color($foreground, 'text');
+        }
+      }
     }
-}    
+  }
+  .dd-dragel {
+    background-color: mat-color($accent, 100);
+    border: 2px dashed mat-color($primary, 500);
+    button {
+      display: none;
+    }
+  }
+}
