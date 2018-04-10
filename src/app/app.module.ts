@@ -8,7 +8,7 @@ import { NestableModule } from '../../lib/src/nestable.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
+    AppComponent
   ],
   imports: [
     BrowserModule,

@@ -7,34 +7,37 @@
 
 <div class="demo-content">
   <div fxLayout.lt-sm="column" fxLayoutGap="16px" fxFlexOffset="16px">
-    <button mat-raised-button color="primary"
-      (click)="nestable.expandAll()">Expand All</button>
-    <button mat-raised-button color="primary"
-      (click)="nestable.collapseAll()">Collapse All</button>
-    <button mat-raised-button color="primary"
-      (click)="pushItem()">Push Item</button>
+    <button mat-raised-button color="primary" (click)="nestable.expandAll()">Expand All</button>
+    <button mat-raised-button color="primary" (click)="nestable.collapseAll()">Collapse All</button>
+    <button mat-raised-button color="primary" (click)="pushItem()">Push Item</button>
     <div fxFlex></div>
     <mat-slide-toggle [checked]="options.fixedDepth" (change)="toggleFixedDepth()">
       Fixed depth
     </mat-slide-toggle>
   </div>
-  
+
   <div fxFlex fxLayout="row" fxLayout.lt-sm="column" fxFlexOffset="16px">
-    <ngx-nestable [(list)]="list" #nestable
-      [options]="options"
-      [template]="itemTemplate" fxFlex="50">
+    <ngx-nestable [(list)]="list" #nestable [options]="options" [template]="itemTemplate" fxFlex="50">
     </ngx-nestable>
-    
-    <div style="position: fixed; left: 50%; height: calc(100vh - 150px); width: calc(50% - 30px);"
-      fxFlex="1 1 auto" fxFlexOffset="16px" fxFlexOffset.lt-sm="0px">
+
+    <div style="position: fixed; left: 50%; height: calc(100vh - 150px); width: calc(50% - 30px);" fxFlex="1 1 auto" fxFlexOffset="16px"
+      fxFlexOffset.lt-sm="0px">
       <textarea fxFlex>{{list | json}}</textarea>
     </div>
   </div>
 </div>
 
 <ng-template #itemTemplate let-row>
-  <!-- <button mat-icon-button [ngxNestableDragHandle]="row">
+  <button mat-icon-button [ngxNestableDragHandle]="row">
     <mat-icon>drag_handle</mat-icon>
-  </button> -->
+  </button>
+  <button mat-icon-button *ngIf="row.item.children && row.item.children.length; else empty_item" [ngxNestableExpandCollapse]="row">
+    <mat-icon>{{row.item.$$expanded ? 'keyboard_arrow_down' : 'keyboard_arrow_right'}}
+    </mat-icon>
+  </button>
   <div>Item: {{row.item.id}}</div>
+</ng-template>
+
+<ng-template #empty_item>
+  <span style="width: 40px"></span>
 </ng-template>

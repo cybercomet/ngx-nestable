@@ -8,14 +8,12 @@ import {
 } from '@angular/core';
 
 import { REGISTER_HANDLE, DRAG_START } from '../nestable.constant';
-import { EventEmitter } from '@angular/core';
 
 @Directive({
   selector: '[ngxNestableDragHandle]'
 })
 export class NestableDragHandleDirective implements OnInit {
   @Input() public ngxNestableDragHandle;
-  @Output() dragEvent: EventEmitter<any> = new EventEmitter();
 
   @HostListener('mousedown', ['$event'])
   public onMouseDown(event) {
