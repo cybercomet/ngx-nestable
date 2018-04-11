@@ -67,4 +67,8 @@ export class AppComponent {
   public drop(e) {
     console.log(e);
   }
+
+  public onDisclosure(e) {
+    console.log(e);
+  }
 }
