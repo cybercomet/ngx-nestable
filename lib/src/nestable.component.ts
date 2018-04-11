@@ -20,12 +20,13 @@ import {
   defaultSettings,
   mouse,
   REGISTER_HANDLE,
-  DRAG_START
+  DRAG_START,
+  EXPAND_COLLAPSE
 } from './nestable.constant';
 import { NestableSettings } from './nestable.models';
 
 const PX = 'px';
-const hasPointerEvents = (function () {
+const hasPointerEvents = (function() {
   const el = document.createElement('div'),
     docEl = document.documentElement;
 
@@ -54,6 +55,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   @Output() public listChange = new EventEmitter();
   @Output() public drop = new EventEmitter();
   @Output() public drag = new EventEmitter();
+  @Output() public disclosure = new EventEmitter();
 
   @Input() public template: ViewContainerRef;
   @Input() public options = defaultSettings;
@@ -101,7 +103,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     private el: ElementRef,
     private zone: NgZone
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     // set/extend default options
@@ -118,7 +120,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._createHandleListener();
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   private _generateItemIds() {
     helper._traverseChildren(this._list, item => {
@@ -141,8 +143,19 @@ export class NestableComponent implements OnInit, OnDestroy {
       this._registerHandleDirective = true;
     });
 
-    this.renderer.listen(this.el.nativeElement, DRAG_START, (data) => {
-      this.dragStart(data.detail.event, data.detail.param.item, data.detail.param.parentList);
+    this.renderer.listen(this.el.nativeElement, DRAG_START, data => {
+      this.dragStart(
+        data.detail.event,
+        data.detail.param.item,
+        data.detail.param.parentList
+      );
+    });
+
+    this.renderer.listen(this.el.nativeElement, EXPAND_COLLAPSE, data => {
+      this.disclosure.emit({
+        item: data.detail.item,
+        expanded: data.detail.item['$$expanded']
+      });
     });
   }
 
@@ -396,12 +409,12 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     // find root list of item under cursor
     const pointElRoot = helper._closest(
-      this.pointEl,
-      `.${this.options.rootClass}`
-    ),
+        this.pointEl,
+        `.${this.options.rootClass}`
+      ),
       isNewRoot = pointElRoot
         ? this.dragRootEl.dataset['nestable-id'] !==
-        pointElRoot.dataset['nestable-id']
+          pointElRoot.dataset['nestable-id']
         : false;
 
     /**
@@ -443,7 +456,9 @@ export class NestableComponent implements OnInit, OnDestroy {
 
       if (this.options.fixedDepth) {
         if (pointRelativeDepth === this.relativeDepth - 1) {
-          const childList = this.pointEl.querySelector(this.options.listNodeName);
+          const childList = this.pointEl.querySelector(
+            this.options.listNodeName
+          );
           if (!childList.children.length) {
             childList.appendChild(this._placeholder);
           }
@@ -456,8 +471,17 @@ export class NestableComponent implements OnInit, OnDestroy {
           } else {
             helper._insertAfter(this._placeholder, this.pointEl);
           }
-        }
 
+          if (
+            Array.prototype.indexOf.call(
+              this.pointEl.parentElement.children,
+              this.pointEl
+            ) ===
+            this.pointEl.parentElement.children.length - 1
+          ) {
+            helper._insertAfter(this._placeholder, this.pointEl);
+          }
+        }
       } else if (before) {
         this.pointEl.parentElement.insertBefore(
           this._placeholder,
