@@ -97,7 +97,8 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _placeholder;
   private _itemId = 0;
   private _registerHandleDirective = false;
-
+  private _dragIndex;
+  private _parentDragId;
   constructor(
     private ref: ChangeDetectorRef,
     private renderer: Renderer2,
@@ -535,12 +536,14 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     this.ref.detach();
+    this._dragIndex = parentList.indexOf(item);
     this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
 
     const dragItem = helper._closest(event.target, this.options.itemNodeName);
     if (dragItem === null) {
       return;
     }
+    this._parentDragId = Number.parseInt(dragItem.parentElement.parentElement.id);
 
     const dragRect = dragItem.getBoundingClientRect();
 
@@ -581,6 +584,11 @@ export class NestableComponent implements OnInit, OnDestroy {
         this.options.itemNodeName
       );
 
+      let changedElementPosition = this._dragIndex !== Array.prototype.indexOf.call(
+        this._placeholder.parentElement.children,
+        this._placeholder
+      );
+
       // placeholder in root
       if (placeholderContainer === null) {
         this.list.splice(
@@ -610,6 +618,9 @@ export class NestableComponent implements OnInit, OnDestroy {
             { ...this.dragModel }
           );
         }
+        if (!changedElementPosition) {
+          changedElementPosition = placeholderContainer['$$id'] !== this._parentDragId;
+        }
       }
 
       this._placeholder.parentElement.removeChild(this._placeholder);
@@ -621,7 +632,8 @@ export class NestableComponent implements OnInit, OnDestroy {
       this.drop.emit({
         originalEvent: event,
         destination: placeholderContainer,
-        item: this.dragModel
+        item: this.dragModel,
+        changedElementPosition
       });
       this.ref.reattach();
     }
