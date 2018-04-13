@@ -14,7 +14,7 @@ export const defaultSettings = {
     handleClass: 'dd-handle',
     collapsedClass: 'dd-collapsed',
     placeClass: 'dd-placeholder',
-    group: 0,
+    group: 0, // TODO
     maxDepth: 5,
     threshold: 20,
     fixedDepth: false, // fixed item's depth

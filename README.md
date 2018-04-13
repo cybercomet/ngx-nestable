@@ -83,6 +83,34 @@ app.html
     <span style="width: 40px"></span>
   </ng-template>
 ```
+
+## API
+
+  ### Inputs
+
+  | Name| Type| Default|Descirption|
+  | :-------------: |:-------------:| :-----:|:--------------|
+  | list| Array|   | Items which will be displayed in tree
+  | template| TemplateRef|    | HTML template for tree item. Inside this template you can place directives (ngxNestableDragHandle and ngxNestableExpandCollapse). That will describe the custom look and position of these elements. Otherwise, the default functions are applied.
+
+  #### options
+
+  | Name| Type| Default|Descirption|
+  | :-------------: |:-------------:| :-----:|:--------------|
+  | fixedDepth      | boolean |false | Constaint items to keep their initial depth
+  | maxDepth      | number|   5 | Maximum nested depth
+  | threshold | number     |    20 | Distance in px after which horizontal movement (nesting) is applied. Also gives padding to the tree. 
+  | disableDrag| boolean|    false| Disable/enable drag event
+  | template| TemplateRef|    | HTML template for tree item. Inside this template you can place directives (ngxNestableDragHandle and ngxNestableExpandCollapse). That will describe the custom look and position of these elements, otherwise the default functions are applied.
+
+  ### Outputs
+
+  | Name| Type |Descirption|
+  | :-------------: |:-------------:| :-----|
+  | drag| void| Emits event when item drag is started  
+  | drop| void| Emits event when item is dropped
+  |disclosure|void| Emits event when item expand/collapse state is changed
+
 ## Authors
 
 * **Petar Markov** - *Initial work* - [Speculees](https://github.com/speculees)
