@@ -22,4 +22,5 @@ export interface NestableSettings {
     fixedDepth?: boolean;
     fixed?: boolean;
     exportCollapsed?: boolean;
+    disableDrag?: boolean;
 }

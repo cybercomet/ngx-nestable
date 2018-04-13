@@ -59,6 +59,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
   @Input() public template: ViewContainerRef;
   @Input() public options = defaultSettings;
+  @Input() public disableDrag = false;
   @Input()
   public get list() {
     return this._list;
@@ -517,59 +518,63 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   private dragStart(event, item, parentList) {
-    event.stopPropagation();
-    event.preventDefault();
+    if (!this.options.disableDrag) {
+      event.stopPropagation();
+      event.preventDefault();
 
-    if (event.originalEvent) {
-      event = event.originalEvent;
-    }
+      if (event.originalEvent) {
+        event = event.originalEvent;
+      }
 
-    // allow only first mouse button
-    if (event.type.indexOf('mouse') === 0) {
-      if (event.button !== 0) {
+      // allow only first mouse button
+      if (event.type.indexOf('mouse') === 0) {
+        if (event.button !== 0) {
+          return;
+        }
+      } else {
+        if (event.touches.length !== 1) {
+          return;
+        }
+      }
+
+      this.ref.detach();
+      this._dragIndex = parentList.indexOf(item);
+      this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
+
+      const dragItem = helper._closest(event.target, this.options.itemNodeName);
+      if (dragItem === null) {
         return;
       }
-    } else {
-      if (event.touches.length !== 1) {
-        return;
-      }
+      this._parentDragId = Number.parseInt(
+        dragItem.parentElement.parentElement.id
+      );
+
+      const dragRect = dragItem.getBoundingClientRect();
+
+      this._showMasks();
+      this._createDragClone(event, dragItem);
+      this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
+
+      this._createPlaceholder(event, dragItem);
+      this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
+
+      this._calculateDepth();
+      this.drag.emit({
+        originalEvent: event,
+        item
+      });
+
+      this._cancelMouseup = this.renderer.listen(
+        document,
+        'mouseup',
+        this.dragStop.bind(this)
+      );
+      this._cancelMousemove = this.renderer.listen(
+        document,
+        'mousemove',
+        this.dragMove.bind(this)
+      );
     }
-
-    this.ref.detach();
-    this._dragIndex = parentList.indexOf(item);
-    this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
-
-    const dragItem = helper._closest(event.target, this.options.itemNodeName);
-    if (dragItem === null) {
-      return;
-    }
-    this._parentDragId = Number.parseInt(dragItem.parentElement.parentElement.id);
-
-    const dragRect = dragItem.getBoundingClientRect();
-
-    this._showMasks();
-    this._createDragClone(event, dragItem);
-    this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
-
-    this._createPlaceholder(event, dragItem);
-    this.renderer.setStyle(this._placeholder, 'height', dragRect.height + PX);
-
-    this._calculateDepth();
-    this.drag.emit({
-      originalEvent: event,
-      item
-    });
-
-    this._cancelMouseup = this.renderer.listen(
-      document,
-      'mouseup',
-      this.dragStop.bind(this)
-    );
-    this._cancelMousemove = this.renderer.listen(
-      document,
-      'mousemove',
-      this.dragMove.bind(this)
-    );
   }
 
   public dragStop(event) {
@@ -584,10 +589,12 @@ export class NestableComponent implements OnInit, OnDestroy {
         this.options.itemNodeName
       );
 
-      let changedElementPosition = this._dragIndex !== Array.prototype.indexOf.call(
-        this._placeholder.parentElement.children,
-        this._placeholder
-      );
+      let changedElementPosition =
+        this._dragIndex !==
+        Array.prototype.indexOf.call(
+          this._placeholder.parentElement.children,
+          this._placeholder
+        );
 
       // placeholder in root
       if (placeholderContainer === null) {
@@ -619,7 +626,8 @@ export class NestableComponent implements OnInit, OnDestroy {
           );
         }
         if (!changedElementPosition) {
-          changedElementPosition = placeholderContainer['$$id'] !== this._parentDragId;
+          changedElementPosition =
+            placeholderContainer['$$id'] !== this._parentDragId;
         }
       }
 

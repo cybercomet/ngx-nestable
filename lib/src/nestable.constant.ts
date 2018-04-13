@@ -18,9 +18,8 @@ export const defaultSettings = {
     maxDepth: 5,
     threshold: 20,
     fixedDepth: false, // fixed item's depth
-    exportCollapsed: true,
-    disableDrag: false, // TODO
-    disableNesting: false // TODO
+    exportCollapsed: true, // TODO
+    disableDrag: false,
 } as NestableSettings;
 
 export const mouse = {
