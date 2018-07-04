@@ -100,6 +100,8 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _registerHandleDirective = false;
   private _dragIndex;
   private _parentDragId;
+  private _oldListLength: any;
+
   constructor(
     private ref: ChangeDetectorRef,
     private renderer: Renderer2,
@@ -518,6 +520,9 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   private dragStart(event, item, parentList) {
+
+    this._oldListLength = this.list.length;
+
     if (!this.options.disableDrag) {
       event.stopPropagation();
       event.preventDefault();
@@ -596,6 +601,12 @@ export class NestableComponent implements OnInit, OnDestroy {
           this._placeholder
         );
 
+      const index = Array.prototype.indexOf.call(this._placeholder.parentElement.children, this._placeholder);
+
+      if ((this._dragIndex === index) && (this._oldListLength === this.list.length)) {
+        changedElementPosition = true;
+      }
+
       // placeholder in root
       if (placeholderContainer === null) {
         this.list.splice(
@@ -624,6 +635,9 @@ export class NestableComponent implements OnInit, OnDestroy {
             0,
             { ...this.dragModel }
           );
+        }
+        if (index === this._dragIndex) {
+          changedElementPosition = false;
         }
         if (!changedElementPosition) {
           changedElementPosition =
