@@ -9,8 +9,8 @@
       <ng-container *ngTemplateOutlet="nestableItem; context:{nestable: nestable, item: item, depth: depth}">
       </ng-container>
 
-      <ng-container *ngIf="item.children && item.$$expanded">
-        <ng-container *ngTemplateOutlet="nestableList; context:{nestable: item.children, depth: depth + 1}">
+      <ng-container *ngIf="getChildren(item) && item.$$expanded">
+        <ng-container *ngTemplateOutlet="nestableList; context:{nestable: getChildren(item), depth: depth + 1}">
         </ng-container>
       </ng-container>
 

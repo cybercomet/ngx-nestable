@@ -20,6 +20,7 @@ export const defaultSettings = {
     fixedDepth: false, // fixed item's depth
     exportCollapsed: true, // TODO
     disableDrag: false,
+    childrenKey: 'children',
 } as NestableSettings;
 
 export const mouse = {

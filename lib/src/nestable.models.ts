@@ -23,4 +23,5 @@ export interface NestableSettings {
     fixed?: boolean;
     exportCollapsed?: boolean;
     disableDrag?: boolean;
+    childrenKey?: string;
 }

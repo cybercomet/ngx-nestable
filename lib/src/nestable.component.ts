@@ -127,13 +127,13 @@ export class NestableComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {}
 
   private _generateItemIds() {
-    helper._traverseChildren(this._list, item => {
+    helper._traverseChildren(this._list, this.options.childrenKey, item => {
       item['$$id'] = this._itemId++;
     });
   }
 
   private _generateItemExpanded() {
-    helper._traverseChildren(this._list, item => {
+    helper._traverseChildren(this._list, this.options.childrenKey, item => {
       if (typeof item.expanded === 'undefined') {
         item['$$expanded'] = true;
       } else {
@@ -463,7 +463,8 @@ export class NestableComponent implements OnInit, OnDestroy {
           const childList = this.pointEl.querySelector(
             this.options.listNodeName
           );
-          if (!childList.children.length) {
+          const children = this.getChildren(childList);
+          if (!children.length) {
             childList.appendChild(this._placeholder);
           }
         } else if (pointRelativeDepth === this.relativeDepth) {
@@ -621,13 +622,14 @@ export class NestableComponent implements OnInit, OnDestroy {
         // palceholder nested
         placeholderContainer = helper._findObjectInTree(
           this.list,
-          Number.parseInt(placeholderContainer.id)
+          Number.parseInt(placeholderContainer.id),
+          this.options.childrenKey,
         );
-        if (!placeholderContainer.children) {
-          placeholderContainer.children = [];
-          placeholderContainer.children.push({ ...this.dragModel });
+        if (!placeholderContainer[this.options.childrenKey]) {
+          placeholderContainer[this.options.childrenKey] = [];
+          placeholderContainer[this.options.childrenKey].push({ ...this.dragModel });
         } else {
-          placeholderContainer.children.splice(
+          placeholderContainer[this.options.childrenKey].splice(
             Array.prototype.indexOf.call(
               this._placeholder.parentElement.children,
               this._placeholder
@@ -673,16 +675,20 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   public expandAll() {
-    helper._traverseChildren(this._list, item => {
+    helper._traverseChildren(this._list, this.options.childrenKey, item => {
       item['$$expanded'] = true;
     });
     this.ref.markForCheck();
   }
 
   public collapseAll() {
-    helper._traverseChildren(this._list, item => {
+    helper._traverseChildren(this._list, this.options.childrenKey, item => {
       item['$$expanded'] = false;
     });
     this.ref.markForCheck();
+  }
+
+  public getChildren(item) {
+    return item[this.options.childrenKey];
   }
 }
