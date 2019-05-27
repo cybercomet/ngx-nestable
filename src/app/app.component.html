@@ -18,11 +18,14 @@
             (click)="nestable.collapseAll()">Collapse All</button>
     <button mat-raised-button
             color="primary"
-            (click)="pushItem()">Push Item</button>
+            (click)="list1 = pushItem(list1)">Push Item to list 1</button>
+    <button mat-raised-button
+            color="primary"
+            (click)="list2 = pushItem(list2)">Push Item to list 2</button>
     <div fxFlex></div>
-    <mat-slide-toggle [checked]="options.fixedDepth"
+    <mat-slide-toggle [checked]="options1.fixedDepth"
                       (change)="toggleFixedDepth()">
-      Fixed depth
+      Fixed depth for list 1
     </mat-slide-toggle>
   </div>
 
@@ -33,19 +36,29 @@
     <ngx-nestable (drag)="drag($event)"
                   (drop)="drop($event)"
                   (disclosure)="onDisclosure($event)"
-                  [(list)]="list"
+                  [(list)]="list1"
                   #nestable
-                  [options]="options"
+                  [options]="options1"
                   [template]="itemTemplate"
                   fxFlex="50">
     </ngx-nestable>
 
-    <div style="position: fixed; left: 50%; height: calc(100vh - 150px); width: calc(50% - 30px);"
+    <ngx-nestable (drag)="drag($event)"
+                  (drop)="drop($event)"
+                  (disclosure)="onDisclosure($event)"
+                  [(list)]="list2"
+                  #nestable
+                  [options]="options2"
+                  [template]="itemTemplate"
+                  fxFlex="50">
+    </ngx-nestable>
+
+    <!-- <div style="position: fixed; left: 50%; height: calc(100vh - 150px); width: calc(50% - 30px);"
          fxFlex="1 1 auto"
          fxFlexOffset="16px"
          fxFlexOffset.lt-sm="0px">
-      <textarea fxFlex>{{list | json}}</textarea>
-    </div>
+      <textarea fxFlex>{{list1 | json}}</textarea>
+    </div> -->
   </div>
 </div>
 

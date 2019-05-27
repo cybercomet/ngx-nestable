@@ -11,7 +11,6 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   OnDestroy,
-  NgZone
 } from '@angular/core';
 
 import * as helper from './nestable.helper';
@@ -24,6 +23,8 @@ import {
   EXPAND_COLLAPSE
 } from './nestable.constant';
 import { NestableSettings } from './nestable.models';
+
+type DisplayType = 'block' | 'none';
 
 const PX = 'px';
 const hasPointerEvents = (function() {
@@ -89,10 +90,11 @@ export class NestableComponent implements OnInit, OnDestroy {
   public pointEl = null;
   public items = [];
 
+  private groupMask: HTMLScriptElement;
   private _componentActive = false;
   private _mouse = Object.assign({}, mouse);
   private _list = [];
-  // private _options = Object.assign({}, defaultSettings) as NestableSettings;
+
   private _cancelMousemove: Function;
   private _cancelMouseup: Function;
   private _placeholder;
@@ -106,7 +108,6 @@ export class NestableComponent implements OnInit, OnDestroy {
     private ref: ChangeDetectorRef,
     private renderer: Renderer2,
     private el: ElementRef,
-    private zone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -119,12 +120,26 @@ export class NestableComponent implements OnInit, OnDestroy {
       }
     }
 
+    this._generateGroupClass();
     this._generateItemIds();
     this._generateItemExpanded();
     this._createHandleListener();
+
+    this.el.nativeElement.addEventListener('group-dispatch', ({ detail }) => {
+      
+      
+      this.el.nativeElement.querySelector('.ul').appendChild(detail.item);
+      this.el.nativeElement.querySelector('.nestable-group-mask').style.display = 'none';
+    });
   }
 
   ngOnDestroy(): void {}
+
+  private _generateGroupClass(): void {
+    this.groupMask = <HTMLScriptElement>this.el.nativeElement.querySelector('.nestable-group-mask');
+    this.groupMask.classList.add(`nestable-group-${this.options.group}`);
+    this.groupMask.dataset['group'] = String(this.options.group);
+  }
 
   private _generateItemIds() {
     helper._traverseChildren(this._list, item => {
@@ -251,21 +266,26 @@ export class NestableComponent implements OnInit, OnDestroy {
       this._mouse.distY === 0 ? 0 : this._mouse.distY > 0 ? 1 : -1;
   }
 
-  private _showMasks() {
-    const masks = this.el.nativeElement.getElementsByClassName(
-      'nestable-item-mask'
-    );
-    for (let i = 0; i < masks.length; i++) {
-      masks[i].style.display = 'block';
-    }
-  }
+  /**
+   * Showing masks is used to easly determinate ITEM or GROUP over which we are hovering
+   */
+  private _toggleMasks(display: DisplayType) {
+    const itemMasks = <HTMLScriptElement[]><any>this.el.nativeElement
+      .getElementsByClassName('nestable-item-mask');
+    
+    const groupMasks = <HTMLScriptElement[]><any>document
+      .getElementsByClassName('nestable-group-mask');
 
-  private _hideMasks() {
-    const masks = this.el.nativeElement.getElementsByClassName(
-      'nestable-item-mask'
-    );
-    for (let i = 0; i < masks.length; i++) {
-      masks[i].style.display = 'none';
+    for (const group of groupMasks) {
+      if (group === this.groupMask) {
+        continue;
+      }
+
+      group.style.display = display;
+    }
+
+    for (const item of itemMasks) {
+      item.style.display = display;
     }
   }
 
@@ -288,7 +308,6 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _move(event) {
     let depth, list;
 
-    const dragRect = this.dragEl.getBoundingClientRect();
     this.renderer.setStyle(
       this.dragEl,
       'left',
@@ -336,12 +355,23 @@ export class NestableComponent implements OnInit, OnDestroy {
       this.dragEl.style.visibility = 'visible';
     }
 
-    if (
-      pointEl &&
-      (pointEl.classList.contains('nestable-item-mask') ||
-        pointEl.classList.contains(this.options.placeClass))
+    if (!pointEl) { return; }
+
+    if (pointEl.classList.contains('nestable-item-mask') ||
+        pointEl.classList.contains(this.options.placeClass)
     ) {
       this.pointEl = pointEl.parentElement.parentElement;
+    } else if (pointEl.classList.contains('nestable-group-mask')) {
+      const customEvent = new CustomEvent('group-dispatch', { detail: {
+        item: this.dragEl,
+        model: this.dragModel,
+        event,
+      } });
+
+      pointEl.parentElement.dispatchEvent(customEvent);
+      this.dragStop(event);
+      this.el.nativeElement.querySelector('.nestable-group-mask').style.display = 'block';
+
     } else {
       return;
     }
@@ -411,27 +441,10 @@ export class NestableComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // find root list of item under cursor
-    const pointElRoot = helper._closest(
-        this.pointEl,
-        `.${this.options.rootClass}`
-      ),
-      isNewRoot = pointElRoot
-        ? this.dragRootEl.dataset['nestable-id'] !==
-          pointElRoot.dataset['nestable-id']
-        : false;
-
     /**
      * move vertical
      */
-    if (!this._mouse.dirAx || isNewRoot) {
-      // check if groups match if dragging over new root
-      if (
-        isNewRoot &&
-        this.options.group !== pointElRoot.dataset['nestable-group']
-      ) {
-        return;
-      }
+    if (!this._mouse.dirAx) {
 
       // check depth limit
       depth =
@@ -541,22 +554,24 @@ export class NestableComponent implements OnInit, OnDestroy {
           return;
         }
       }
-
+console.log(parentList, item)
       this.ref.detach();
       this._dragIndex = parentList.indexOf(item);
       this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
 
       const dragItem = helper._closest(event.target, this.options.itemNodeName);
+      
       if (dragItem === null) {
         return;
       }
+
       this._parentDragId = Number.parseInt(
         dragItem.parentElement.parentElement.id
       );
 
       const dragRect = dragItem.getBoundingClientRect();
 
-      this._showMasks();
+      this._toggleMasks('block');
       this._createDragClone(event, dragItem);
       this.renderer.setStyle(this.dragEl, 'width', dragRect.width + PX);
 
@@ -585,7 +600,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   public dragStop(event) {
     this._cancelMouseup();
     this._cancelMousemove();
-    this._hideMasks();
+    this._toggleMasks('none');
 
     if (this.dragEl) {
       const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
