@@ -68,7 +68,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
   public set list(list) {
     this._list = list;
-    this._generateItemIds();
+    this._generateItemIdAndParent();
   }
 
   public dragRootEl = null;
@@ -101,8 +101,6 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _registerHandleDirective = false;
   private _dragIndex;
   private _parentList;
-  private _parentDragId;
-  private _oldListLength: any;
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -119,7 +117,7 @@ export class NestableComponent implements OnInit, OnDestroy {
       }
     }
 
-    this._generateItemIds();
+    this._generateItemIdAndParent();
     this._generateItemExpanded();
     this._createHandleListener();
 
@@ -139,9 +137,12 @@ export class NestableComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { }
 
-  private _generateItemIds() {
+  private _generateItemIdAndParent() {
     helper._traverseChildren(this._list, (item, parent) => {
-      item['$$id'] = this._itemId++;
+      if (typeof item['$$id'] === 'undefined') {
+        item['$$id'] = this._itemId++;
+      }
+
       item['$$parent'] = parent;
     });
   }
@@ -502,6 +503,13 @@ export class NestableComponent implements OnInit, OnDestroy {
       this._mouse[key] = 0;
     }
 
+    this.items = [];
+    this._cancelMousemove = undefined
+    this._cancelMouseup = undefined
+    this._placeholder = null;
+    this._registerHandleDirective = false;
+    this._dragIndex = undefined;
+
     this._itemId = 0;
     this._parentList = undefined;
     this.dragModel = null;
@@ -522,7 +530,6 @@ export class NestableComponent implements OnInit, OnDestroy {
 
   private dragStart(event, item, parentList): void {
     this._parentList = parentList;
-    this._oldListLength = this.list.length;
 
     if (!this.options.disableDrag) {
       event.stopPropagation();
@@ -552,10 +559,6 @@ export class NestableComponent implements OnInit, OnDestroy {
       if (dragItem === null) {
         return;
       }
-
-      this._parentDragId = Number.parseInt(
-        dragItem.parentElement.parentElement.id
-      );
 
       const dragRect = dragItem.getBoundingClientRect();
 
@@ -603,6 +606,7 @@ export class NestableComponent implements OnInit, OnDestroy {
       if (Number(this.pointEl.dataset['group']) !== this.options.group) {
         this._dispatchToGroup();
         this.ref.reattach();
+        this.reset();
         return;
       }
 
@@ -640,10 +644,12 @@ export class NestableComponent implements OnInit, OnDestroy {
           );
         }
       }
+
+      this._generateItemIdAndParent();
     } else {
       const parentEl = this.dragModel['$$parent'];
       if (parentEl) {
-        parentEl.children = [...parentEl.children];
+        parentEl.children = parentEl.children.map(item => ({ ...item }))
       } else {
         this.list = this.list.map(item => ({ ...item }));
       }
