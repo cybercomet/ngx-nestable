@@ -23,6 +23,7 @@ import {
   EXPAND_COLLAPSE
 } from './nestable.constant';
 import { NestableSettings } from './nestable.models';
+import { e } from '@angular/core/src/render3';
 
 type DisplayType = 'block' | 'none';
 
@@ -90,8 +91,6 @@ export class NestableComponent implements OnInit, OnDestroy {
   public pointEl = null;
   public items = [];
 
-  private groupMask: HTMLScriptElement;
-  private _componentActive = false;
   private _mouse = Object.assign({}, mouse);
   private _list = [];
 
@@ -101,6 +100,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _itemId = 0;
   private _registerHandleDirective = false;
   private _dragIndex;
+  private _parentList;
   private _parentDragId;
   private _oldListLength: any;
 
@@ -112,7 +112,6 @@ export class NestableComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // set/extend default options
-    this._componentActive = true;
     const optionKeys = Object.keys(defaultSettings);
     for (const key of optionKeys) {
       if (typeof this.options[key] === 'undefined') {
@@ -120,34 +119,30 @@ export class NestableComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.el.nativeElement.dataset['group'] = this.options.group;
-
-    this._generateGroupClass();
     this._generateItemIds();
     this._generateItemExpanded();
     this._createHandleListener();
 
-    this.el.nativeElement.addEventListener('group-dispatch', ({ detail }) => {
-      this.el.nativeElement.querySelector('.nestable-group-mask').style.display = 'none';
-      this._toggleMasks('block');
+    this.el.nativeElement.dataset['group'] = this.options.group;
+    this.el.nativeElement.addEventListener('group-dispatch', event => {
+      const nestable: NestableComponent = event.detail.nestable;
+      this.dragModel = nestable.dragModel;
+      this.dragEl = nestable.dragEl;
+      this._placeholder = nestable._placeholder;
+      this._parentList = nestable._parentList;
+      this._dragIndex = nestable._dragIndex;
+      this.pointEl = nestable.pointEl;
 
-      // _dispatchMouseDown
-      // this.list = [detail.model, ...this.list];
-      // this.ref.markForCheck();
+      this.dragStop(event);
     });
   }
 
   ngOnDestroy(): void { }
 
-  private _generateGroupClass(): void {
-    this.groupMask = <HTMLScriptElement>this.el.nativeElement.querySelector('.nestable-group-mask');
-    this.groupMask.classList.add(`nestable-group-${this.options.group}`);
-    this.groupMask.dataset['group'] = String(this.options.group);
-  }
-
   private _generateItemIds() {
-    helper._traverseChildren(this._list, item => {
+    helper._traverseChildren(this._list, (item, parent) => {
       item['$$id'] = this._itemId++;
+      item['$$parent'] = parent;
     });
   }
 
@@ -274,19 +269,8 @@ export class NestableComponent implements OnInit, OnDestroy {
    * Showing masks is used to easly determinate ITEM or GROUP over which we are hovering
    */
   private _toggleMasks(display: DisplayType) {
-    const itemMasks = <HTMLScriptElement[]><any>this.el.nativeElement
+    const itemMasks = <HTMLScriptElement[]><any>document
       .getElementsByClassName('nestable-item-mask');
-
-    const groupMasks = <HTMLScriptElement[]><any>document
-      .getElementsByClassName('nestable-group-mask');
-
-    for (const group of groupMasks) {
-      if (group === this.groupMask) {
-        continue;
-      }
-
-      group.style.display = display;
-    }
 
     for (const item of itemMasks) {
       item.style.display = display;
@@ -365,12 +349,9 @@ export class NestableComponent implements OnInit, OnDestroy {
       pointEl.classList.contains(this.options.placeClass)
     ) {
       this.pointEl = pointEl.parentElement.parentElement;
-    } else if (pointEl.classList.contains('nestable-group-mask')) {
-      this._dispatchToGroup(event, pointEl);
     } else {
       return;
     }
-
 
     /**
      * move horizontal
@@ -506,27 +487,13 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  private _dispatchToGroup(event: any, pointEl: Element) {
+  private _dispatchToGroup() {
+    const nestableContainerTarget = document.querySelector(`[data-group="${this.pointEl.dataset['group']}"]`)
     const customEvent = new CustomEvent('group-dispatch', {
-      detail: {
-        item: this.dragEl,
-        model: this.dragModel,
-        event,
-      }
+      detail: { nestable: this }
     });
 
-    pointEl.parentElement.dispatchEvent(customEvent);
-  }
-
-  private _dispatchMouseUp() {
-    const customEvent = new Event('mouseup');
-
-    document.dispatchEvent(customEvent);
-  }
-
-  private _dispatchMouseDown() {
-    const detail = {};
-    const customEvent = new CustomEvent(DRAG_START, { bubbles: true, detail })
+    nestableContainerTarget.dispatchEvent(customEvent);
   }
 
   public reset() {
@@ -536,6 +503,8 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     this._itemId = 0;
+    this._parentList = undefined;
+    this.dragModel = null;
     this.moving = false;
     this.dragEl = null;
     this.dragRootEl = null;
@@ -551,8 +520,8 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  private dragStart(event, item, parentList) {
-
+  private dragStart(event, item, parentList): void {
+    this._parentList = parentList;
     this._oldListLength = this.list.length;
 
     if (!this.options.disableDrag) {
@@ -576,7 +545,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
       this.ref.detach();
       this._dragIndex = parentList.indexOf(item);
-      this.dragModel = parentList.splice(parentList.indexOf(item), 1)[0];
+      this.dragModel = this._parentList[this._dragIndex];
 
       const dragItem = helper._closest(event.target, this.options.itemNodeName);
 
@@ -616,35 +585,35 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
   }
 
-  public dragStop(event) {
-    this._cancelMouseup();
-    this._cancelMousemove();
+  public dragStop(event): void {
+    let placeholderContainer, changedElementPosition;
 
-    this.el.nativeElement.querySelector('.nestable-group-mask').style.display = 'none';
+    if (typeof this._cancelMousemove === 'function') {
+      this._cancelMousemove();
+    }
+
+    if (typeof this._cancelMouseup === 'function') {
+      this._cancelMouseup();
+    }
+
     this._toggleMasks('none');
 
-    if (this.dragEl) {
-      const draggedId = Number.parseInt(this.dragEl.firstElementChild.id);
-      let placeholderContainer = helper._closest(
+    if (this.dragEl && this.pointEl) {      
+
+      if (Number(this.pointEl.dataset['group']) !== this.options.group) {
+        this._dispatchToGroup();
+        this.ref.reattach();
+        return;
+      }
+
+      this._parentList.splice(this._dragIndex, 1)[0];
+
+      placeholderContainer = helper._closest(
         this._placeholder,
         this.options.itemNodeName
       );
 
-      let changedElementPosition =
-        this._dragIndex !==
-        Array.prototype.indexOf.call(
-          this._placeholder.parentElement.children,
-          this._placeholder
-        );
-
-      const index = Array.prototype.indexOf.call(this._placeholder.parentElement.children, this._placeholder);
-
-      if ((this._dragIndex === index) && (this._oldListLength === this.list.length)) {
-        changedElementPosition = true;
-      }
-
-      // placeholder in root
-      if (placeholderContainer === null) {
+      if (placeholderContainer === null) { // placeholder in root
         this.list.splice(
           Array.prototype.indexOf.call(
             this._placeholder.parentElement.children,
@@ -653,12 +622,10 @@ export class NestableComponent implements OnInit, OnDestroy {
           0,
           { ...this.dragModel }
         );
-      } else {
-        // palceholder nested
-        placeholderContainer = helper._findObjectInTree(
-          this.list,
-          Number.parseInt(placeholderContainer.id)
-        );
+      } else { // palceholder nested
+        placeholderContainer = helper.
+          _findObjectInTree(this.list, Number(placeholderContainer.id));
+          
         if (!placeholderContainer.children) {
           placeholderContainer.children = [];
           placeholderContainer.children.push({ ...this.dragModel });
@@ -672,29 +639,28 @@ export class NestableComponent implements OnInit, OnDestroy {
             { ...this.dragModel }
           );
         }
-        if (index === this._dragIndex) {
-          changedElementPosition = false;
-        }
-        if (!changedElementPosition) {
-          changedElementPosition =
-            placeholderContainer['$$id'] !== this._parentDragId;
-        }
       }
-
-      this._placeholder.parentElement.removeChild(this._placeholder);
-      this.dragEl.parentNode.removeChild(this.dragEl);
-      this.dragEl.remove();
-      this.reset();
-
-      this.listChange.emit(this.list);
-      this.drop.emit({
-        originalEvent: event,
-        destination: placeholderContainer,
-        item: this.dragModel,
-        changedElementPosition
-      });
-      this.ref.reattach();
+    } else {
+      const parentEl = this.dragModel['$$parent'];
+      if (parentEl) {
+        parentEl.children = [...parentEl.children];
+      } else {
+        this.list = this.list.map(item => ({ ...item }));
+      }
     }
+
+    this._placeholder.parentElement.removeChild(this._placeholder);
+    this.dragEl.parentNode.removeChild(this.dragEl);
+    this.dragEl.remove();
+    this.reset();
+
+    this.listChange.emit(this.list);
+    this.drop.emit({
+      originalEvent: event,
+      destination: placeholderContainer,
+      item: this.dragModel,
+    });
+    this.ref.reattach();
   }
 
   public dragMove(event) {
