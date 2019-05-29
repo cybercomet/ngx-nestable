@@ -16,7 +16,7 @@ export interface NestableSettings {
     emptyClass?: string;
     expandBtnHTML?: string;
     collapseBtnHTML?: string;
-    group?: number;
+    group: number;
     maxDepth?: number;
     threshold?: number;
     fixedDepth?: boolean;

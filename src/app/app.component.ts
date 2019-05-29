@@ -1,5 +1,6 @@
-import { Component, ElementRef, Renderer2 } from '@angular/core';
+import { Component, ViewChildren, QueryList } from '@angular/core';
 import { NestableSettings } from '../../lib/src/nestable.models';
+import { NestableComponent } from '../../lib';
 
 @Component({
   selector: 'app-root',
@@ -8,7 +9,11 @@ import { NestableSettings } from '../../lib/src/nestable.models';
 })
 export class AppComponent {
 
+  @ViewChildren(NestableComponent) 
+  public nestables: QueryList<NestableComponent>;  
+
   public idCount = 30;
+  public visibilty = null;
 
   public options1 = {
     fixedDepth: false,
@@ -87,8 +92,13 @@ export class AppComponent {
     return [...list];
   }
 
-  public toggleFixedDepth() {
-    this.options1.fixedDepth = !this.options1.fixedDepth;
+  public show({ value }) {
+    this.visibilty = value;
+    this.nestables.forEach(nestable => nestable[this.visibilty]())
+  }
+
+  public toggleFixedDepth(options) {
+    options.fixedDepth = !options.fixedDepth;
   }
 
   public drag(event) {
@@ -99,7 +109,7 @@ export class AppComponent {
     console.log(event);
   }
 
-  public onDisclosure(event) {
-    console.log(event);
+  public onDisclosure() {
+    this.visibilty = null;
   }
 }

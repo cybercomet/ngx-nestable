@@ -13,6 +13,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 
+import { NestableService } from './nestable.service';
 import * as helper from './nestable.helper';
 
 import {
@@ -23,7 +24,6 @@ import {
   EXPAND_COLLAPSE
 } from './nestable.constant';
 import { NestableSettings } from './nestable.models';
-import { e } from '@angular/core/src/render3';
 
 type DisplayType = 'block' | 'none';
 
@@ -87,22 +87,22 @@ export class NestableComponent implements OnInit, OnDestroy {
    */
   public relativeDepth = 0;
 
-  public hasNewRoot = false;
   public pointEl = null;
   public items = [];
 
   private _mouse = Object.assign({}, mouse);
   private _list = [];
 
+  private _currentGroup: Number;
   private _cancelMousemove: Function;
   private _cancelMouseup: Function;
   private _placeholder;
-  private _itemId = 0;
   private _registerHandleDirective = false;
   private _dragIndex;
   private _parentList;
 
   constructor(
+    private service: NestableService,
     private ref: ChangeDetectorRef,
     private renderer: Renderer2,
     private el: ElementRef,
@@ -121,6 +121,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._generateItemExpanded();
     this._createHandleListener();
 
+    this._currentGroup = this.options.group;
     this.el.nativeElement.dataset['group'] = this.options.group;
     this.el.nativeElement.addEventListener('group-dispatch', event => {
       const nestable: NestableComponent = event.detail.nestable;
@@ -138,12 +139,10 @@ export class NestableComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { }
 
   private _generateItemIdAndParent() {
-    helper._traverseChildren(this._list, (item, parent) => {
+    helper._traverseChildren(this._list, item => {
       if (typeof item['$$id'] === 'undefined') {
-        item['$$id'] = this._itemId++;
+        item['$$id'] = this.service.generateID();
       }
-
-      item['$$parent'] = parent;
     });
   }
 
@@ -295,7 +294,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   }
 
   private _move(event) {
-    let depth, list;
+    let list;
 
     this.renderer.setStyle(
       this.dragEl,
@@ -372,7 +371,7 @@ export class NestableComponent implements OnInit, OnDestroy {
         list = list[list.length - 1];
 
         // check if depth limit has reached
-        depth = helper._getParents(
+        const depth = helper._getParents(
           this._placeholder,
           this.el.nativeElement.querySelector(this.options.listNodeName)
         ).length;
@@ -419,61 +418,45 @@ export class NestableComponent implements OnInit, OnDestroy {
       return;
     }
 
+    let groupSwap = false;
+    if (this.pointEl.dataset && this.pointEl.dataset['group']) {
+      if (Number(this.pointEl.dataset['group']) !== this._currentGroup) {
+        this._currentGroup = Number(this.pointEl.dataset['group']);
+        groupSwap = true;
+      }
+    }
+
     /**
      * move vertical
      */
-    if (!this._mouse.dirAx) {
+    if (!this._mouse.dirAx || groupSwap) {
 
       // check depth limit
-      depth =
-        this.dragDepth -
-        1 +
-        helper._getParents(
-          this.pointEl,
-          this.el.nativeElement.querySelector(this.options.listNodeName)
-        ).length;
+      const rootUL = <HTMLElement>document.querySelector(`ngx-nestable[data-group="${this._currentGroup}"] ${this.options.listNodeName}`);
+      const pointRelativeDepth = helper._getParents(this.pointEl, rootUL).length;
+      const depth = this.dragDepth - 1 + pointRelativeDepth;
 
       if (depth > this.options.maxDepth) {
         return;
       }
 
-      const before =
-        event.pageY <
-        helper._offset(this.pointEl).top + this.pointEl.clientHeight / 2;
-      const placeholderParent = this._placeholder.parentNode;
-
-      // get point element depth
-      let pointRelativeDepth;
-      pointRelativeDepth = helper._getParents(
-        this.pointEl,
-        this.el.nativeElement.querySelector(this.options.listNodeName)
-      ).length;
+      const before = event.pageY < helper._offset(this.pointEl).top + this.pointEl.clientHeight / 2;
 
       if (this.options.fixedDepth) {
         if (pointRelativeDepth === this.relativeDepth - 1) {
-          const childList = this.pointEl.querySelector(
-            this.options.listNodeName
-          );
+          const childList = this.pointEl.querySelector(this.options.listNodeName);
+
           if (!childList.children.length) {
             childList.appendChild(this._placeholder);
           }
         } else if (pointRelativeDepth === this.relativeDepth) {
           if (before) {
-            this.pointEl.parentElement.insertBefore(
-              this._placeholder,
-              this.pointEl
-            );
+            this.pointEl.parentElement.insertBefore(this._placeholder, this.pointEl);
           } else {
             helper._insertAfter(this._placeholder, this.pointEl);
           }
 
-          if (
-            Array.prototype.indexOf.call(
-              this.pointEl.parentElement.children,
-              this.pointEl
-            ) ===
-            this.pointEl.parentElement.children.length - 1
-          ) {
+          if (this.pointEl.parentElement.children.indexOf(this.pointEl) === this.pointEl.parentElement.children.length - 1) {
             helper._insertAfter(this._placeholder, this.pointEl);
           }
         }
@@ -510,7 +493,7 @@ export class NestableComponent implements OnInit, OnDestroy {
     this._registerHandleDirective = false;
     this._dragIndex = undefined;
 
-    this._itemId = 0;
+    this._currentGroup = this.options.group;
     this._parentList = undefined;
     this.dragModel = null;
     this.moving = false;
@@ -518,7 +501,6 @@ export class NestableComponent implements OnInit, OnDestroy {
     this.dragRootEl = null;
     this.dragDepth = 0;
     this.relativeDepth = 0;
-    this.hasNewRoot = false;
     this.pointEl = null;
   }
 
@@ -601,7 +583,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     this._toggleMasks('none');
 
-    if (this.dragEl && this.pointEl) {      
+    if (this.dragEl && this.pointEl) {
 
       if (Number(this.pointEl.dataset['group']) !== this.options.group) {
         this._dispatchToGroup();
@@ -627,14 +609,14 @@ export class NestableComponent implements OnInit, OnDestroy {
           { ...this.dragModel }
         );
       } else { // palceholder nested
-        placeholderContainer = helper.
+        const placeholderContainerModel = helper.
           _findObjectInTree(this.list, Number(placeholderContainer.id));
-          
-        if (!placeholderContainer.children) {
-          placeholderContainer.children = [];
-          placeholderContainer.children.push({ ...this.dragModel });
+
+        if (!placeholderContainerModel.children) {
+          placeholderContainerModel.children = [];
+          placeholderContainerModel.children.push({ ...this.dragModel });
         } else {
-          placeholderContainer.children.splice(
+          placeholderContainerModel.children.splice(
             Array.prototype.indexOf.call(
               this._placeholder.parentElement.children,
               this._placeholder
@@ -647,12 +629,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
       this._generateItemIdAndParent();
     } else {
-      const parentEl = this.dragModel['$$parent'];
-      if (parentEl) {
-        parentEl.children = parentEl.children.map(item => ({ ...item }))
-      } else {
-        this.list = this.list.map(item => ({ ...item }));
-      }
+      this._parentList[this._parentList.indexOf(this.dragModel)] = { ...this.dragModel };
     }
 
     this._placeholder.parentElement.removeChild(this._placeholder);
