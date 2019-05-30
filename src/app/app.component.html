@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar class="header mat-elevation-z8" color="primary">
   <span fxFlex>Ngx-nestable demo</span>
   <div class="demo-white-circle">
     <img src="assets/ngx_nestable.svg"
@@ -10,19 +10,30 @@
   <div fxLayout.lt-sm="column"
        fxLayoutGap="16px"
        fxFlexOffset="16px">
-    <button mat-raised-button
+    <mat-button-toggle-group value="visibilty"
+                             (change)="show($event)">
+      <mat-button-toggle value="expandAll">
+        <mat-icon>keyboard_arrow_down</mat-icon>
+      </mat-button-toggle>
+      <mat-button-toggle value="collapseAll">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <button mat-button
             color="primary"
-            (click)="nestable.expandAll()">Expand All</button>
-    <button mat-raised-button
+            (click)="list1 = pushItem(list1)">Push Item to list 1</button>
+    <button mat-button
             color="primary"
-            (click)="nestable.collapseAll()">Collapse All</button>
-    <button mat-raised-button
-            color="primary"
-            (click)="pushItem()">Push Item</button>
+            (click)="list2 = pushItem(list2)">Push Item to list 2</button>
     <div fxFlex></div>
-    <mat-slide-toggle [checked]="options.fixedDepth"
-                      (change)="toggleFixedDepth()">
-      Fixed depth
+    <mat-slide-toggle [checked]="options1.fixedDepth"
+                      (change)="toggleFixedDepth(options1)">
+      Fixed depth for list 1
+    </mat-slide-toggle>
+    <mat-slide-toggle [checked]="options2.fixedDepth"
+                      (change)="toggleFixedDepth(options2)">
+      Fixed depth for list 2
     </mat-slide-toggle>
   </div>
 
@@ -30,21 +41,71 @@
        fxLayout="row"
        fxLayout.lt-sm="column"
        fxFlexOffset="16px">
-    <ngx-nestable (drag)="drag($event)"
-                  (drop)="drop($event)"
-                  (disclosure)="onDisclosure($event)"
-                  [(list)]="list"
-                  #nestable
-                  [options]="options"
-                  [template]="itemTemplate"
-                  fxFlex="50">
-    </ngx-nestable>
+    <div fxFlex
+         fxLayout="column">
+      <div>
+        <section class="mat-typography mb2">
+          <h2>List 1</h2>
 
-    <div style="position: fixed; left: 50%; height: calc(100vh - 150px); width: calc(50% - 30px);"
-         fxFlex="1 1 auto"
-         fxFlexOffset="16px"
-         fxFlexOffset.lt-sm="0px">
-      <textarea fxFlex>{{list | json}}</textarea>
+          Can swap items with list 2 and send to list 3
+        </section>
+
+        <ngx-nestable (drag)="drag($event)"
+                      (drop)="drop($event)"
+                      (disclosure)="onDisclosure($event)"
+                      [(list)]="list1"
+                      [options]="options1"
+                      [template]="itemTemplate">
+        </ngx-nestable>
+      </div>
+
+      <span>{{list1 | json}}</span>
+    </div>
+
+    <div class="ml2"></div>
+
+    <div fxFlex
+         fxLayout="column">
+      <div>
+        <section class="mat-typography mb2">
+          <h2>List 2</h2>
+
+          Can swap items with list 1 and receive form list 3
+        </section>
+
+        <ngx-nestable (drag)="drag($event)"
+                      (drop)="drop($event)"
+                      (disclosure)="onDisclosure($event)"
+                      [(list)]="list2"
+                      [options]="options2"
+                      [template]="itemTemplate">
+        </ngx-nestable>
+      </div>
+
+      <span>{{list2 | json}}</span>
+    </div>
+
+    <div class="ml2"></div>
+
+    <div fxFlex
+         fxLayout="column">
+      <div>
+        <section class="mat-typography mb2">
+          <h2>List 3</h2>
+
+          Sends to list 2 and receives from list 1
+        </section>
+
+        <ngx-nestable (drag)="drag($event)"
+                      (drop)="drop($event)"
+                      (disclosure)="onDisclosure($event)"
+                      [(list)]="list3"
+                      [options]="options3"
+                      [template]="itemTemplate">
+        </ngx-nestable>
+      </div>
+
+      <span>{{list3 | json}}</span>
     </div>
   </div>
 </div>
@@ -55,12 +116,13 @@
           [ngxNestableDragHandle]="row">
     <mat-icon>drag_handle</mat-icon>
   </button>
+
   <button mat-icon-button
           *ngIf="row.item.children && row.item.children.length; else empty_item"
           [ngxNestableExpandCollapse]="row">
-    <mat-icon>{{row.item.$$expanded ? 'keyboard_arrow_down' : 'keyboard_arrow_right'}}
-    </mat-icon>
+    <mat-icon>{{row.item.$$expanded ? 'keyboard_arrow_down' : 'keyboard_arrow_right'}}</mat-icon>
   </button>
+
   <div>Item: {{row.item.id}}</div>
 </ng-template>
 

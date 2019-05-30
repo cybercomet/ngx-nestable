@@ -1,5 +1,6 @@
-import { Component, ElementRef, Renderer2 } from '@angular/core';
+import { Component, ViewChildren, QueryList } from '@angular/core';
 import { NestableSettings } from '../../lib/src/nestable.models';
+import { NestableComponent } from '../../lib';
 
 @Component({
   selector: 'app-root',
@@ -8,11 +9,32 @@ import { NestableSettings } from '../../lib/src/nestable.models';
 })
 export class AppComponent {
 
-  public idCount = 13;
-  public options = {
-    fixedDepth: false
+  @ViewChildren(NestableComponent) 
+  public nestables: QueryList<NestableComponent>;  
+
+  public idCount = 30;
+  public visibilty = null;
+
+  public options1 = {
+    fixedDepth: false,
+    group: 1,
+    sendToGroups: [2, 3],
+    receiveFromGroups: [2]
   } as NestableSettings;
-  public list = [
+  
+  public options2 = {
+    fixedDepth: false,
+    group: 2,
+    sendToGroups: [1],
+    receiveFromGroups: [1, 3]
+  } as NestableSettings;
+
+  public options3 = {
+    fixedDepth: false,
+    group: 3
+  } as NestableSettings;
+
+  public list1 = [
     { 'id': 1 },
     {
       'expanded': true,
@@ -42,33 +64,74 @@ export class AppComponent {
     { 'id': 15 }
   ];
 
-  constructor(
-    private el: ElementRef,
-    private renderer: Renderer2
-  ) {
-    this.renderer.listen(this.el.nativeElement, 'listUpdated', e => {
-      this.list = e.detail.list;
-    });
+  public list2 = [
+    { 'id': 16 },
+    {
+      'expanded': true,
+      'id': 17, 'children': [
+        { 'id': 18 },
+        { 'id': 19 },
+        {
+          'expanded': false,
+          'id': 20, 'children': [
+            { 'id': 21 },
+            { 'id': 22 },
+            { 'id': 23 }
+          ]
+        },
+        { 'id': 24 },
+        { 'id': 25 }
+      ]
+    },
+    { 'id': 26 },
+    {
+      'id': 27,
+      'children': [
+        { 'id': 28 }
+      ]
+    },
+    { 'id': 29 },
+    { 'id': 30 }
+  ];
+
+  public list3 = [
+    { 'id': 31 },
+    { 'id': 32, },
+    { 'id': 33 },
+    {
+      'id': 34,
+      'expanded': false,
+      'children': [{ 'id': 35 }]
+    },
+    { 'id': 36 },
+    { 'id': 37 }
+  ];
+
+  constructor() { }
+
+  public pushItem(list) {
+    list.push({ id: ++this.idCount });
+    return [...list];
   }
 
-  public pushItem() {
-    this.list.push({ id: ++this.idCount });
-    this.list = [...this.list];
+  public show({ value }) {
+    this.visibilty = value;
+    this.nestables.forEach(nestable => nestable[this.visibilty]())
   }
 
-  public toggleFixedDepth() {
-    this.options.fixedDepth = !this.options.fixedDepth;
+  public toggleFixedDepth(options) {
+    options.fixedDepth = !options.fixedDepth;
   }
 
-  public drag(e) {
-    console.log(e);
+  public drag(event) {
+    console.log(event);
   }
 
-  public drop(e) {
-    console.log(e);
+  public drop(event) {
+    console.log(event);
   }
 
-  public onDisclosure(e) {
-    console.log(e);
+  public onDisclosure() {
+    this.visibilty = null;
   }
 }

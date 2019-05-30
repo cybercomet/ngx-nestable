@@ -17,13 +17,11 @@ export class NestableDragHandleDirective implements OnInit {
 
   @HostListener('mousedown', ['$event'])
   public onMouseDown(event) {
-    const detail = {
-      param: this.ngxNestableDragHandle,
-      event: event
-    };
-    this._el.nativeElement.dispatchEvent(
-      new CustomEvent(DRAG_START, { bubbles: true, detail: detail })
-    );
+    const param = this.ngxNestableDragHandle;
+    const detail = { param, event };
+    const customEvent = new CustomEvent(DRAG_START, { bubbles: true, detail })
+
+    this._el.nativeElement.dispatchEvent(customEvent);
   }
 
   constructor(private _el: ElementRef) {}

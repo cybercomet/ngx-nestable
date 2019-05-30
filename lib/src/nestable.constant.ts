@@ -14,11 +14,10 @@ export const defaultSettings = {
     handleClass: 'dd-handle',
     collapsedClass: 'dd-collapsed',
     placeClass: 'dd-placeholder',
-    group: 0, // TODO
-    maxDepth: 5,
+    group: 0,
+    maxDepth: Infinity,
     threshold: 20,
     fixedDepth: false, // fixed item's depth
-    exportCollapsed: true, // TODO
     disableDrag: false,
 } as NestableSettings;
 

@@ -16,11 +16,12 @@ export interface NestableSettings {
     emptyClass?: string;
     expandBtnHTML?: string;
     collapseBtnHTML?: string;
-    group?: number;
+    group: number;
     maxDepth?: number;
     threshold?: number;
     fixedDepth?: boolean;
     fixed?: boolean;
-    exportCollapsed?: boolean;
     disableDrag?: boolean;
+    sendToGroups?: Array<number>;
+    receiveFromGroups?: Array<number>;
 }
