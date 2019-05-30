@@ -4,7 +4,7 @@
 <ng-template #nestableList let-nestable="nestable" let-depth="depth">
   <ul [style.padding-left.px]="depth ? options.threshold : 0"
     [class]="options.listClass">
-    <li [class]="options.itemClass" [id]="item.$$id" [attr.data-group]="options.group"
+    <li [class]="options.itemClass" [id]="item.$$id" [attr.data-group]="options.group" [attr.data-receives]="options.receiveFromGroups"
       *ngFor="let item of nestable"
     >
 

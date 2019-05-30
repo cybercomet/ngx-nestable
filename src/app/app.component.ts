@@ -17,12 +17,21 @@ export class AppComponent {
 
   public options1 = {
     fixedDepth: false,
-    group: 1
+    group: 1,
+    sendToGroups: [2, 3],
+    receiveFromGroups: [2]
   } as NestableSettings;
-
+  
   public options2 = {
     fixedDepth: false,
-    group: 2
+    group: 2,
+    sendToGroups: [1],
+    receiveFromGroups: [1, 3]
+  } as NestableSettings;
+
+  public options3 = {
+    fixedDepth: false,
+    group: 3
   } as NestableSettings;
 
   public list1 = [
@@ -83,6 +92,19 @@ export class AppComponent {
     },
     { 'id': 29 },
     { 'id': 30 }
+  ];
+
+  public list3 = [
+    { 'id': 31 },
+    { 'id': 32, },
+    { 'id': 33 },
+    {
+      'id': 34,
+      'expanded': false,
+      'children': [{ 'id': 35 }]
+    },
+    { 'id': 36 },
+    { 'id': 37 }
   ];
 
   constructor() { }

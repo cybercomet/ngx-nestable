@@ -23,7 +23,6 @@ import {
   DRAG_START,
   EXPAND_COLLAPSE
 } from './nestable.constant';
-import { NestableSettings } from './nestable.models';
 
 type DisplayType = 'block' | 'none';
 
@@ -93,7 +92,7 @@ export class NestableComponent implements OnInit, OnDestroy {
   private _mouse = Object.assign({}, mouse);
   private _list = [];
 
-  private _currentGroup: Number;
+  private _currentGroup: number;
   private _cancelMousemove: Function;
   private _cancelMouseup: Function;
   private _placeholder;
@@ -123,6 +122,7 @@ export class NestableComponent implements OnInit, OnDestroy {
 
     this._currentGroup = this.options.group;
     this.el.nativeElement.dataset['group'] = this.options.group;
+    this.el.nativeElement.dataset['receives'] = this.options.receiveFromGroups;
     this.el.nativeElement.addEventListener('group-dispatch', event => {
       const nestable: NestableComponent = event.detail.nestable;
       this.dragModel = nestable.dragModel;
@@ -419,10 +419,16 @@ export class NestableComponent implements OnInit, OnDestroy {
     }
 
     let groupSwap = false;
-    if (this.pointEl.dataset && this.pointEl.dataset['group']) {
-      if (Number(this.pointEl.dataset['group']) !== this._currentGroup) {
-        this._currentGroup = Number(this.pointEl.dataset['group']);
-        groupSwap = true;
+    if (Number(this.pointEl.dataset['group']) !== this.options.group) {
+      if (this.pointEl.dataset && this.pointEl.dataset['group']) {
+        if (!this._groupSwappAllowed()) {
+          return;
+        }
+  
+        if (Number(this.pointEl.dataset['group']) !== this._currentGroup) {
+          this._currentGroup = Number(this.pointEl.dataset['group']);
+          groupSwap = true;
+        }
       }
     }
 
@@ -469,6 +475,23 @@ export class NestableComponent implements OnInit, OnDestroy {
         helper._insertAfter(this._placeholder, this.pointEl);
       }
     }
+  }
+
+  private _groupSwappAllowed(): boolean {
+    const { sendToGroups = [], group } = this.options;
+    const targetGroup = Number(this.pointEl.dataset['group']);
+    const receives = this.pointEl.dataset['receives'] || ',';
+    const targetGroupReceives = receives.length === 1 ? [Number(receives)] : receives.split(',').map(i => Number(i));
+    // debugger
+    // const targetGroupReceives = typeof receives !== 'number' ? receives : [ receives ];
+    let swapAllowed = false;
+    if (sendToGroups.includes(targetGroup)) {
+      swapAllowed = true;
+    } else if (targetGroupReceives.includes(group)) {
+        swapAllowed = true;
+    }
+
+    return swapAllowed;
   }
 
   private _dispatchToGroup() {

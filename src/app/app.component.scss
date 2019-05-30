@@ -6,6 +6,20 @@
   span {
     white-space: pre-wrap;
   }
+
+  .ml2 {
+    margin-left: 16px;
+  }
+
+  .mb2 {
+    margin-bottom: 16px;
+  }
+}
+
+.header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
 }
 
 .demo-content {

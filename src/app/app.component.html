@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar class="header mat-elevation-z8" color="primary">
   <span fxFlex>Ngx-nestable demo</span>
   <div class="demo-white-circle">
     <img src="assets/ngx_nestable.svg"
@@ -10,7 +10,8 @@
   <div fxLayout.lt-sm="column"
        fxLayoutGap="16px"
        fxFlexOffset="16px">
-    <mat-button-toggle-group value="visibilty" (change)="show($event)">
+    <mat-button-toggle-group value="visibilty"
+                             (change)="show($event)">
       <mat-button-toggle value="expandAll">
         <mat-icon>keyboard_arrow_down</mat-icon>
       </mat-button-toggle>
@@ -43,6 +44,12 @@
     <div fxFlex
          fxLayout="column">
       <div>
+        <section class="mat-typography mb2">
+          <h2>List 1</h2>
+
+          Can swap items with list 2 and send to list 3
+        </section>
+
         <ngx-nestable (drag)="drag($event)"
                       (drop)="drop($event)"
                       (disclosure)="onDisclosure($event)"
@@ -55,9 +62,17 @@
       <span>{{list1 | json}}</span>
     </div>
 
+    <div class="ml2"></div>
+
     <div fxFlex
          fxLayout="column">
       <div>
+        <section class="mat-typography mb2">
+          <h2>List 2</h2>
+
+          Can swap items with list 1 and receive form list 3
+        </section>
+
         <ngx-nestable (drag)="drag($event)"
                       (drop)="drop($event)"
                       (disclosure)="onDisclosure($event)"
@@ -68,6 +83,29 @@
       </div>
 
       <span>{{list2 | json}}</span>
+    </div>
+
+    <div class="ml2"></div>
+
+    <div fxFlex
+         fxLayout="column">
+      <div>
+        <section class="mat-typography mb2">
+          <h2>List 3</h2>
+
+          Sends to list 2 and receives from list 1
+        </section>
+
+        <ngx-nestable (drag)="drag($event)"
+                      (drop)="drop($event)"
+                      (disclosure)="onDisclosure($event)"
+                      [(list)]="list3"
+                      [options]="options3"
+                      [template]="itemTemplate">
+        </ngx-nestable>
+      </div>
+
+      <span>{{list3 | json}}</span>
     </div>
   </div>
 </div>

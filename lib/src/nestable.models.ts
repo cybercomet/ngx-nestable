@@ -21,6 +21,7 @@ export interface NestableSettings {
     threshold?: number;
     fixedDepth?: boolean;
     fixed?: boolean;
-    exportCollapsed?: boolean;
     disableDrag?: boolean;
+    sendToGroups?: Array<number>;
+    receiveFromGroups?: Array<number>;
 }
