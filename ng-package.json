@@ -1,0 +1,7 @@
+{
+    "$schema": "./node_modules/ng-packagr/package.schema.json",
+    "lib": {
+      "entryFile": "lib/index.ts"
+    },
+    "dest": "./dist/ngx-nestable"
+}
