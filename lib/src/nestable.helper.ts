@@ -1,4 +1,4 @@
-export const _traverseChildren = (tree, callback, parent = null) => {
+export const _traverseChildren = (tree, childrenKey, callback, parent = null) => {
     for (let i = 0; i < tree.length; i++) {
         const item = tree[i];
         if (typeof item === 'undefined') { continue; }
@@ -6,8 +6,8 @@ export const _traverseChildren = (tree, callback, parent = null) => {
 
         if (callbackResult) { break; }
 
-        if (item.children) {
-            _traverseChildren(item.children, callback, item);
+        if (item[childrenKey]) {
+            _traverseChildren(item[childrenKey], childrenKey, callback, item);
         }
     }
 };
@@ -91,10 +91,10 @@ export const _offset = (elem) => {
     };
 };
 
-export const _findObjectInTree = (array, id) => {
+export const _findObjectInTree = (array, id, childrenKey) => {
     let result = null;
 
-    _traverseChildren(array, item => {
+    _traverseChildren(array, childrenKey, item => {
         if (item['$$id'] === Number.parseInt(id)) {
             result = item;
             return true;
