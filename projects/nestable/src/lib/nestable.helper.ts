@@ -1,10 +1,14 @@
 export const _traverseChildren = (tree, callback, parent = null) => {
     for (let i = 0; i < tree.length; i++) {
         const item = tree[i];
-        if (typeof item === 'undefined') { continue; }
+        if (typeof item === 'undefined') {
+            continue;
+        }
         const callbackResult = callback(item, parent);
 
-        if (callbackResult) { break; }
+        if (callbackResult) {
+            break;
+        }
 
         if (item.children) {
             _traverseChildren(item.children, callback, item);
@@ -40,7 +44,9 @@ export const _getParents = (el, parentSelector = document.body) => {
 
     while (parentNode !== parentSelector) {
         const o = parentNode;
-        if (!parentNode) { break; }
+        if (!parentNode) {
+            break;
+        }
         if (parentNode.tagName === parentSelector.tagName) {
             parents.push(o);
         }
@@ -68,9 +74,13 @@ export const _closest = (el, selector) => {
     // traverse parents
     while (el) {
         parent = el.parentElement;
-        if (parent === null) { break; }
+        if (parent === null) {
+            break;
+        }
         const matches = parent[matchesFn](selector);
-        if (parent && matches) { return parent; }
+        if (parent && matches) {
+            return parent;
+        }
         el = parent;
     }
 

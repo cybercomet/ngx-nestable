@@ -1,5 +1,5 @@
 import { Component, ElementRef, Renderer2 } from '@angular/core';
-import { NestableSettings } from '../../lib/src/nestable.models';
+import { NestableSettings } from '../../projects/nestable/src/lib/nestable.models';
 
 @Component({
   selector: 'app-root',
