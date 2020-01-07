@@ -1,0 +1,4 @@
+{
+  "entry": "./projects/nestable/src/lib/_nestable-theme.scss",
+  "dest": "./dist/ngx-nestable/_nestable-theme.scss"
+}

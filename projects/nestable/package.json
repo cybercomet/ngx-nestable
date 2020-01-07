@@ -6,15 +6,15 @@
   "homepage": "https://github.com/cybercomet/ngx-nestable",
   "private": false,
   "contributors": [
-    { 
+    {
       "name" : "Petar Markov",
       "email" : "speculees@gmail.com"
     },
-    { 
+    {
       "name" : "Zlatomir Darabuc - Zlaya",
       "email" : "zlayabre@gmail.com"
     },
-    { 
+    {
       "name" : "Mihajlo Grubjesic",
       "email" : "mgrubjesic89@gmail.com"
     }
@@ -24,14 +24,7 @@
     "nestable"
   ],
   "peerDependencies": {
-    "@angular/common": ">=4.4.6",
-    "@angular/core": ">=4.4.6"
-  },
-  "ngPackage": {
-    "$schema": "../node_modules/ng-packagr/package.schema.json",
-    "lib": {
-      "entryFile": "index.ts"
-    },
-    "dest": "../dist/ngx-nestable"
+    "@angular/common": "^8.2.0",
+    "@angular/core": "^8.2.0"
   }
 }

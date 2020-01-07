@@ -1,10 +1,10 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { MatButtonModule, MatToolbarModule, MatSlideToggleModule, MatIconModule } from '@angular/material';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { AppComponent } from './app.component';
-import { NestableModule } from '../../lib/src/nestable.module';
+import { NestableModule } from '../../projects/nestable/src/lib/nestable.module';
+import { MatButtonModule, MatIconModule, MatSlideToggleModule, MatToolbarModule } from '@angular/material';
 
 @NgModule({
   declarations: [

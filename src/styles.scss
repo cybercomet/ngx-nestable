@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~@angular/material/theming';
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
-@import "../lib/src/nestable-theme";
+@import "../projects/nestable/src/lib/nestable-theme";
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
